@@ -1,0 +1,48 @@
+[exercise]
+name = "generics_and_any"
+category = "47_code_organization"
+difficulty = 3
+estimated_time = "20m"
+
+[description]
+title = "Generics and Any"
+summary = "Replace unsafe any/interface{} usage with proper generic type constraints"
+learning_objectives = [
+  "Identify when any hides type safety bugs",
+  "Use Go generics with type constraints",
+  "Understand the comparable constraint",
+  "Write type-safe generic utility functions"
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Generics and Any ===
+
+--- Sum ---
+Sum of ints: 15
+Sum of floats: 7.5
+
+--- Contains ---
+Contains bob: true
+Contains dave: false
+Contains 20: true
+
+--- Minimum ---
+Min(3, 7): 3
+Min(3.14, 2.71): 2.71
+Min(apple, banana): apple
+
+--- Map ---
+Uppercased: [HELLO WORLD GO]
+Doubled: [2 4 6 8]
+
+Generics refactoring complete!"""
+timeout = "30s"
+
+[hints]
+level_1 = """Define type constraints using interface syntax, e.g., type Number interface { int | float64 }. Then change function signatures to use type parameters like func sum[T Number](values []T) T."""
+level_2 = """For sum, use a Number constraint. For contains, use the built-in comparable constraint. For minimum, use your Ordered constraint. For mapSlice, use two type parameters [T, U any]."""
+level_3 = """sum[T Number](values []T) T, contains[T comparable](slice []T, target T) bool, minimum[T Ordered](a, b T) T, mapSlice[T, U any](input []T, fn func(T) U) []U. Update the call sites to use typed slices."""
+
+[metadata]
+tags = ["generics", "type-safety", "any", "constraints", "100-go-mistakes"]

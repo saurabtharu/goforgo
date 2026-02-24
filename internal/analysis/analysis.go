@@ -1,6 +1,6 @@
 package analysis
 
-import "fmt"
+import "log"
 
 // StaticCheck defines the interface for all static analysis checks.
 type StaticCheck interface {
@@ -15,7 +15,7 @@ var registry = make(map[string]StaticCheck)
 // Register adds a new static check to the registry.
 func Register(check StaticCheck) {
 	if _, exists := registry[check.Name()]; exists {
-		panic(fmt.Sprintf("static check already registered: %s", check.Name()))
+		log.Fatalf("static check already registered: %s", check.Name())
 	}
 	registry[check.Name()] = check
 }

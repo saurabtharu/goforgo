@@ -1,0 +1,45 @@
+[exercise]
+name = "comparing_values"
+category = "48_data_types"
+order = 6
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Comparing Values"
+summary = "Fix comparison bugs with slices, maps, and structs that have uncomparable fields"
+learning_objectives = [
+  "Know which Go types are comparable with == and which are not",
+  "Understand reflect.DeepEqual behavior and its nil vs empty gotcha",
+  "Write custom comparison functions when DeepEqual semantics don't match",
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Comparing Values ===
+
+--- Comparable Structs ---
+u1 == u2: true (expected: true)
+u1 == u3: false (expected: false)
+
+--- Structs with Slices ---
+t1 == t2: true (expected: true)
+t1 == t3: false (expected: false)
+
+--- Nil vs Empty Equivalence ---
+c1 == c2 (nil vs empty): true (expected: true)
+c1 == c3 (different version): false (expected: false)
+
+--- Slice Comparison ---
+[1,2,3] == [1,2,3]: true (expected: true)
+[1,2,3] == [1,2,4]: false (expected: false)
+[1,2,3] == nil:     false (expected: false)"""
+timeout = "30s"
+
+[hints]
+level_1 = """Slices, maps, and functions are not comparable with == in Go. Only structs with all comparable fields can use ==."""
+level_2 = """reflect.DeepEqual works for comparing slices and maps, but it treats nil and empty slices/maps as different values."""
+level_3 = """For compareConfigs: write a custom function that checks len() == 0 for both nil and empty. For compareSlices: check lengths first, then compare element by element."""
+
+[metadata]
+tags = ["comparison", "reflect", "deep-equal", "slices", "structs", "100-go-mistakes"]

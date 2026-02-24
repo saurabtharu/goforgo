@@ -1,0 +1,36 @@
+[exercise]
+name = "nil_receiver_filename"
+category = "51_functions_methods"
+difficulty = 3
+estimated_time = "20m"
+
+[description]
+title = "Nil Receiver & io.Reader"
+summary = "Avoid the nil interface trap and prefer io.Reader over filename parameters"
+learning_objectives = [
+  "Understand the nil interface vs nil pointer distinction",
+  "Avoid returning typed nil pointers through interfaces",
+  "Refactor functions to accept io.Reader for testability",
+  "Use thin wrappers for file I/O around reader-based functions"
+]
+
+[validation]
+mode = "run"
+expected_output = """Alice: valid
+Empty name: validation error: field name - cannot be empty
+Word count: 9"""
+timeout = "30s"
+
+[hints]
+level_1 = """In validate(), look at what happens when name is valid. The variable 'err'
+is a *ValidationError nil pointer. When returned as an error interface, the interface
+is non-nil because it has a type (*ValidationError) even though the value is nil."""
+level_2 = """Fix validate() by removing the 'var err *ValidationError' pattern. Instead,
+return &ValidationError{} for the error case and return nil directly for the success case.
+For countWordsFromReader, use io.ReadAll(r) to read all bytes from the reader."""
+level_3 = """For validate: use early return with the error, then 'return nil' at the end.
+For countWordsFromReader: call io.ReadAll(r), then strings.Fields(string(data)) to split
+into words, and return len(words)."""
+
+[metadata]
+tags = ["nil-interface", "io.Reader", "testability", "error-handling", "100-go-mistakes"]

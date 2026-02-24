@@ -1,0 +1,40 @@
+[exercise]
+name = "slice_copy_append"
+category = "48_data_types"
+order = 4
+difficulty = 3
+estimated_time = "20m"
+
+[description]
+title = "Slice Copy and Append Pitfalls"
+summary = "Fix bugs from incorrect copy() usage and append() side effects on shared backing arrays"
+learning_objectives = [
+  "Understand that copy() uses min(len(dst), len(src)), not capacity",
+  "Recognize that append through shared backing arrays causes data corruption",
+  "Use full slice expression s[low:high:max] to prevent aliasing",
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Slice Copy and Append Pitfalls ===
+
+--- Incorrect copy() ---
+Source:      [1 2 3 4 5]
+Destination: [1 2 3 4 5] (len=5)
+
+--- Append Side Effects ---
+Consumer1: [1 2 3 100]
+Consumer2: [1 2 3 200]
+
+--- Safe Slice Passing ---
+Original: [10 20 30 40 50]
+Modified: [10 20 30 99]"""
+timeout = "30s"
+
+[hints]
+level_1 = """copy() copies min(len(dst), len(src)) elements. If dst has length 0, nothing is copied regardless of capacity."""
+level_2 = """The full slice expression s[low:high:max] sets capacity to max-low. Use s[0:3:3] to prevent append from using extra capacity."""
+level_3 = """For copy: use make([]int, len(src)). For append safety: use original[:3:3] to cap capacity at the slice length."""
+
+[metadata]
+tags = ["slices", "copy", "append", "backing-array", "full-slice-expression", "100-go-mistakes"]

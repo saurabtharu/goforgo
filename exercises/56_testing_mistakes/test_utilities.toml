@@ -1,0 +1,35 @@
+[exercise]
+name = "test_utilities"
+category = "56_testing_mistakes"
+difficulty = 3
+estimated_time = "20m"
+
+[description]
+title = "Test Utilities"
+summary = "Use httptest, t.Helper, and t.Cleanup for robust test infrastructure"
+learning_objectives = [
+  "Use httptest.NewRecorder for testing HTTP handlers without a live server",
+  "Mark helper functions with t.Helper for accurate error reporting",
+  "Use t.Cleanup for reliable test resource cleanup",
+  "Build reusable test infrastructure with proper Go testing idioms",
+]
+
+[validation]
+mode = "test"
+timeout = "30s"
+
+[hints]
+level_1 = """For HTTP testing, use httptest.NewRecorder() and http.NewRequest():
+rec := httptest.NewRecorder()
+req := httptest.NewRequest("GET", "/health", nil)
+HealthHandler(rec, req)
+// Now check rec.Code and rec.Body"""
+level_2 = """Add t.Helper() as the first line in assertStatusCode and assertContains.
+This makes error messages point to the test that called the helper,
+not the helper function itself."""
+level_3 = """Replace 'defer os.Remove(path)' with t.Cleanup:
+t.Cleanup(func() { os.Remove(path) })
+This is tied to the test lifecycle and runs even on panic."""
+
+[metadata]
+tags = ["testing", "httptest", "t-helper", "t-cleanup", "100-go-mistakes"]

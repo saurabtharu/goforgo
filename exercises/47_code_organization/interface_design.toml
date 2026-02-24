@@ -1,0 +1,43 @@
+[exercise]
+name = "interface_design"
+category = "47_code_organization"
+difficulty = 4
+estimated_time = "25m"
+
+[description]
+title = "Interface Design"
+summary = "Fix interface pollution, producer-side interfaces, and over-engineering"
+learning_objectives = [
+  "Recognize interface pollution (too many methods)",
+  "Understand consumer-side vs producer-side interface design",
+  "Return concrete types from constructors, not interfaces",
+  "Apply the Interface Segregation Principle in Go"
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Interface Design ===
+
+--- Caching preferences ---
+Cached 3 preferences for user alice
+
+--- Looking up preferences ---
+alice:theme = dark
+alice:language = en
+alice:missing = (not set)
+
+--- All alice entries ---
+  alice:language = en
+  alice:theme = dark
+  alice:timezone = UTC
+
+Interface design fixed!"""
+timeout = "30s"
+
+[hints]
+level_1 = """Remove the large DataStore interface. Change NewInMemoryStore to return *InMemoryStore. Define small interfaces next to the functions that need them."""
+level_2 = """cacheUserPreferences needs Set(). lookupPreference needs Get(). printAllEntries needs Keys() and Get(). Define a small interface for each consumer function."""
+level_3 = """Define: type Setter interface { Set(key, value string) } for cacheUserPreferences, type Getter interface { Get(key string) (string, bool) } for lookupPreference, and type KeyValueReader interface { Keys() []string; Get(key string) (string, bool) } for printAllEntries."""
+
+[metadata]
+tags = ["interfaces", "design", "ISP", "consumer-side", "100-go-mistakes"]

@@ -1,0 +1,68 @@
+[exercise]
+name = "http_mistakes"
+category = "55_standard_library"
+difficulty = 3
+estimated_time = "20m"
+
+[description]
+title = "HTTP Handler and Configuration Mistakes"
+summary = "Fix missing returns after http.Error() and configure proper timeouts for HTTP clients and servers."
+learning_objectives = [
+  "Always return after http.Error() to prevent handler execution from continuing",
+  "Configure HTTP client with explicit timeout and transport settings",
+  "Configure HTTP server with read, write, idle, and header timeouts",
+  "Understand why default zero-timeout HTTP clients and servers are dangerous",
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = """
+http.Error() writes the error response but does NOT stop the handler.
+Without a return statement, the handler keeps executing and may write
+additional data to the response, leaking sensitive information.
+
+The default http.Client has Timeout=0 (no timeout). A slow server
+could make your client hang forever. Always set explicit timeouts.
+"""
+
+level_2 = """
+Three areas to fix:
+1. In buggyHandler(): Add `return` after each http.Error() call
+2. In createHTTPClient(): Set Timeout and configure Transport with
+   IdleConnTimeout and TLSHandshakeTimeout
+3. In createHTTPServer(): Set ReadTimeout, WriteTimeout, IdleTimeout,
+   and ReadHeaderTimeout on the server struct
+"""
+
+level_3 = """
+Fix 1 - Return after error:
+  if apiKey == "" {
+      http.Error(w, "missing API key", http.StatusUnauthorized)
+      return
+  }
+
+Fix 2 - Client config:
+  return &http.Client{
+      Timeout: 10 * time.Second,
+      Transport: &http.Transport{
+          IdleConnTimeout:     90 * time.Second,
+          TLSHandshakeTimeout: 5 * time.Second,
+      },
+  }
+
+Fix 3 - Server config:
+  return &http.Server{
+      Addr:              ":8080",
+      Handler:           http.DefaultServeMux,
+      ReadTimeout:       5 * time.Second,
+      WriteTimeout:      10 * time.Second,
+      IdleTimeout:       120 * time.Second,
+      ReadHeaderTimeout: 2 * time.Second,
+  }
+"""
+
+[metadata]
+tags = ["http", "handler", "timeout", "client", "server", "security", "100-go-mistakes", "mistake-80", "mistake-81"]

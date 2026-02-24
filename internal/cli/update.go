@@ -57,41 +57,9 @@ This command will:
 }
 
 func updateExerciseFiles(baseDir string, completedExercises map[string]bool) error {
-	sourceExercises := ""
-	sourceSolutions := ""
-
-	// Find source directories (same logic as initialize.go)
-	execPath, err := os.Executable()
+	sourceExercises, sourceSolutions, err := findExerciseSourceDirs()
 	if err != nil {
-		execPath = ""
-	}
-
-	var possiblePaths []string
-	if execPath != "" {
-		execDir := filepath.Dir(execPath)
-		possiblePaths = append(possiblePaths,
-			filepath.Join(execDir, "exercises"),
-			filepath.Join(execDir, "..", "exercises"),
-			filepath.Join(execDir, "..", "..", "exercises"),
-		)
-	}
-
-	possiblePaths = append(possiblePaths,
-		"exercises",
-		"../exercises",
-		"../../exercises",
-	)
-
-	for _, path := range possiblePaths {
-		if _, err := os.Stat(path); err == nil {
-			sourceExercises = path
-			sourceSolutions = strings.Replace(path, "exercises", "solutions", 1)
-			break
-		}
-	}
-
-	if sourceExercises == "" {
-		return fmt.Errorf("no source exercises found in binary location")
+		return err
 	}
 
 	fmt.Printf("📂 Updating from source: %s\n", sourceExercises)

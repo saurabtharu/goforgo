@@ -1,0 +1,52 @@
+[exercise]
+name = "error_handling_twice"
+category = "52_error_management"
+order = 4
+difficulty = 3
+estimated_time = "20m"
+
+[description]
+title = "Error Handling Twice"
+summary = "Fix three patterns: duplicate error handling, ignored errors, and lost defer errors"
+learning_objectives = [
+  "Handle errors once — either log or return, not both",
+  "Never ignore returned errors from function calls",
+  "Use named return values to capture errors from deferred Close() calls",
+  "Understand the consequences of each anti-pattern in production code",
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Error Handling Patterns ===
+--- Fix 1: Handle Error Once ---
+Log entries: 1
+  [1] handleOrder failed: processOrder: order ID is empty
+
+--- Fix 2: Handle All Errors ---
+Shipped: book
+Error shipping "fragile-vase": special handling required for "fragile-vase"
+Shipped: laptop
+Processed 3 items: 2 shipped, 1 failed
+
+--- Fix 3: Handle Defer Error ---
+saveReport error: close "empty-report": nothing to flush
+Writer "monthly": flushed 2 items
+saveReport error: <nil>"""
+timeout = "30s"
+
+[hints]
+level_1 = """Bug 1: Remove the logError call in processOrder. Let the caller decide how to handle it.
+In Go, errors should be handled exactly once — either log them or return them."""
+level_2 = """Bug 2: Capture the return value of shipItem and handle it:
+  err := shipItem(item)
+  if err != nil { /* track the failure */ }"""
+level_3 = """Bug 3: Use a named return value and a defer closure:
+  func saveReport(name string, lines []string) (err error) {
+      defer func() {
+          closeErr := w.Close()
+          if closeErr != nil && err == nil { err = closeErr }
+      }()
+  }"""
+
+[metadata]
+tags = ["error-handling", "defer", "logging", "named-returns", "100-go-mistakes"]

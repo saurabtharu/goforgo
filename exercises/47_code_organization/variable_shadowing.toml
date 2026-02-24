@@ -1,0 +1,45 @@
+[exercise]
+name = "variable_shadowing"
+category = "47_code_organization"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Variable Shadowing"
+summary = "Understand and fix variable shadowing bugs caused by := in nested scopes"
+learning_objectives = [
+  "Identify variable shadowing with := operator",
+  "Fix shadowing bugs in if/for/switch blocks",
+  "Understand the difference between := and = in nested scopes",
+  "Recognize multi-return shadowing traps"
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Variable Shadowing Bugs ===
+
+--- Bug 1: Shadow in if block ---
+  TLS enabled: localhost:5432?tls=true
+Connection: localhost:5432?tls=true
+
+--- Bug 2: Shadow in for loop ---
+Sum of positives: 15
+
+--- Bug 3: Shadow in switch ---
+  Classified as: comfortable
+Temperature status: comfortable
+
+--- Bug 4: Shadow with multi-return ---
+  Parsed value: 42
+Config value: 42 Error: <nil>
+
+All shadowing bugs fixed!"""
+timeout = "30s"
+
+[hints]
+level_1 = """Look for places where := is used inside if, for, or switch blocks. The := operator creates a NEW variable in the inner scope, leaving the outer variable unchanged."""
+level_2 = """In Bug 1, change 'connStr := connStr + ...' to 'connStr = connStr + ...' inside the if block. The same pattern applies to the other bugs."""
+level_3 = """Bug 1: Use = instead of := in the if block. Bug 2: Use = instead of := in the for/if block. Bug 3: Use = instead of := in each switch case. Bug 4: Declare the inner err variable separately and use = for value."""
+
+[metadata]
+tags = ["shadowing", "variables", "scoping", "100-go-mistakes"]

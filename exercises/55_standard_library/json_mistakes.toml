@@ -1,0 +1,65 @@
+[exercise]
+name = "json_mistakes"
+category = "55_standard_library"
+difficulty = 3
+estimated_time = "20m"
+
+[description]
+title = "JSON Handling Pitfalls"
+summary = "Fix common JSON marshaling mistakes: embedded field promotion, time format customization, numeric precision, and omitempty with zero values."
+learning_objectives = [
+  "Understand how embedded struct fields are promoted in JSON marshaling",
+  "Implement custom MarshalJSON/UnmarshalJSON for time formatting",
+  "Use json.NewDecoder with UseNumber() for precise numeric handling",
+  "Know when omitempty drops zero values vs nil values",
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = """
+Embedded structs promote their fields to the parent's JSON level.
+If you want nested JSON, use a named field with an explicit json tag.
+
+omitempty considers zero values (0, false, "") as empty and drops them.
+If zero is a valid value, remove omitempty from that field's tag.
+"""
+
+level_2 = """
+For embedded fields: Change `Address` (embedded) to `Address Address` (named field)
+and add a json tag like `json:"address"`.
+
+For time: Create a DateOnly type that wraps time.Time and implements
+json.Marshaler using time.Format("2006-01-02").
+
+For numbers: Use json.NewDecoder(reader).UseNumber() instead of json.Unmarshal,
+then cast to json.Number and call .String().
+"""
+
+level_3 = """
+Embedded fix:
+  type Event struct {
+      Name    string  `json:"name"`
+      Address Address `json:"address"`  // named, not embedded
+      City    string  `json:"city"`
+  }
+
+DateOnly marshaler:
+  func (d DateOnly) MarshalJSON() ([]byte, error) {
+      return json.Marshal(d.Time.Format("2006-01-02"))
+  }
+
+Number precision:
+  decoder := json.NewDecoder(strings.NewReader(raw))
+  decoder.UseNumber()
+  var result map[string]interface{}
+  decoder.Decode(&result)
+  idVal := result["id"].(json.Number).String()
+
+OmitEmpty: Remove omitempty from Age, Score, Verified tags.
+"""
+
+[metadata]
+tags = ["json", "marshaling", "encoding", "time", "omitempty", "100-go-mistakes", "mistake-77"]

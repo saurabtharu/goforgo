@@ -1,0 +1,35 @@
+[exercise]
+name = "benchmarking"
+category = "56_testing_mistakes"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Writing Accurate Benchmarks"
+summary = "Fix common benchmarking mistakes that produce misleading results"
+learning_objectives = [
+  "Prevent compiler optimizations from skipping benchmarked code",
+  "Use b.ResetTimer to exclude setup time from measurements",
+  "Avoid observer effects by keeping setup outside the benchmark loop",
+  "Write sub-benchmarks that correctly isolate the code being measured",
+]
+
+[validation]
+mode = "test"
+timeout = "30s"
+
+[hints]
+level_1 = """To prevent the compiler from optimizing away function calls,
+store the result in a package-level variable:
+var benchResult []int  // package-level
+In the benchmark: var r []int; ... r = SortSlice(input); benchResult = r"""
+level_2 = """Call b.ResetTimer() after any expensive setup that shouldn't
+be measured. For BenchmarkSumSlice, add b.ResetTimer() after GenerateSlice."""
+level_3 = """For the observer effect, move input creation BEFORE the b.N loop:
+parts := make([]string, size)
+for j := range parts { parts[j] = "x" }
+b.ResetTimer()
+for i := 0; i < b.N; i++ { BuildString(parts) }"""
+
+[metadata]
+tags = ["testing", "benchmarks", "performance", "compiler-optimization", "100-go-mistakes"]

@@ -1,0 +1,53 @@
+[exercise]
+name = "defer_evaluation"
+category = "51_functions_methods"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Defer Argument Evaluation"
+summary = "Understand that defer evaluates arguments immediately, not at function exit"
+learning_objectives = [
+  "Understand that defer arguments are evaluated at the defer statement",
+  "Use closures with defer to capture variables by reference",
+  "Distinguish when immediate evaluation is desirable vs problematic",
+  "Apply the closure pattern: defer func() { ... }()"
+]
+
+[validation]
+mode = "run"
+expected_output = """=== processSteps ===
+Running step 1...
+Running step 2...
+Running step 3...
+Final status before return: completed
+Step: cleanup, Status: completed
+
+=== trackCounter ===
+Counter: 1
+Counter: 2
+Counter: 3
+Counter: 4
+Counter: 5
+Final counter: 5
+
+=== deferInLoop ===
+Deferred value: 3
+Deferred value: 2
+Deferred value: 1
+Total sum: 6"""
+timeout = "30s"
+
+[hints]
+level_1 = """When you write 'defer logStatus(\"cleanup\", status)', the value of status
+is captured RIGHT NOW, not when the function exits. So it captures 'pending'."""
+level_2 = """Wrap the deferred call in a closure: defer func() { logStatus(\"cleanup\", status) }().
+The closure captures the variable status by reference, not its current value."""
+level_3 = """Change all three buggy defers to use closures:
+- defer func() { logStatus(\"cleanup\", status) }()
+- defer func() { fmt.Printf(\"Final counter: %d\\n\", counter) }()
+- defer func() { fmt.Printf(\"Total sum: %d\\n\", sum) }()
+Keep the loop defer as-is since immediate evaluation is correct there."""
+
+[metadata]
+tags = ["defer", "closures", "evaluation", "gotchas", "100-go-mistakes"]

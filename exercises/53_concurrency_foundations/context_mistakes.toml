@@ -1,0 +1,33 @@
+[exercise]
+name = "context_mistakes"
+category = "53_concurrency_foundations"
+difficulty = 3
+estimated_time = "20m"
+
+[description]
+title = "Context Mistakes"
+summary = "Fix common context misuse patterns: lost propagation, unchecked cancellation, redundant timeouts, and value abuse"
+learning_objectives = [
+  "Propagate parent context instead of creating new context.Background()",
+  "Check ctx.Done() in long-running loops to respect cancellation",
+  "Understand that nested timeouts are bounded by the shortest deadline",
+  "Use context values only for request-scoped data, not function parameters",
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = "Mistake 1: Replace context.Background() in fetchData with the ctx parameter."
+level_2 = """Mistake 2: Add cancellation checking inside the loop:
+  select {
+  case <-ctx.Done():
+    return results
+  default:
+  }"""
+level_3 = """Mistake 3: Remove the inner context.WithTimeout entirely - just use ctx directly.
+Mistake 4: Change formatResults signature to formatResults(ctx context.Context, data []string, format string, limit int)."""
+
+[metadata]
+tags = ["context", "cancellation", "timeout", "deadline", "100-go-mistakes"]

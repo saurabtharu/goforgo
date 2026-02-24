@@ -1,0 +1,48 @@
+[exercise]
+name = "range_copies"
+category = "49_control_structures"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Range Copies"
+summary = "Range loops copy elements and evaluate the range expression only once"
+learning_objectives = [
+  "Understand that range loop variables are copies of slice elements",
+  "Know that modifying a range variable does not modify the original",
+  "Learn that the range expression is evaluated once before the loop starts",
+  "Use index-based access to modify slice elements in place",
+  "Use index-based loops when the collection grows during iteration",
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Mistake #30: Range Copies Elements ===
+After 10% bonus:
+  Alice: $110.00
+  Bob: $220.00
+  Charlie: $330.00
+
+=== Mistake #31: Range Expression Evaluated Once ===
+Processed tasks:
+  task1
+  task2
+  task3
+  task4
+  task5
+
+Total processed: 5"""
+timeout = "30s"
+
+[hints]
+level_1 = "For mistake #30: the range loop gives you a copy of each element. How can you access the original element in the slice?"
+level_2 = "Use `for i := range accounts` and then modify `accounts[i].Balance` directly instead of using the value variable."
+level_3 = """Fix #30: Replace `for _, acc := range accounts { acc.Balance *= 1.10 }` with:
+  for i := range accounts { accounts[i].Balance *= 1.10 }
+
+Fix #31: Replace the range loop with an index-based for loop:
+  for i := 0; i < len(queue); i++ { item := queue[i]; ... }
+This re-evaluates len(queue) each iteration, picking up appended items."""
+
+[metadata]
+tags = ["range", "copy-semantics", "slice-modification", "100-go-mistakes"]

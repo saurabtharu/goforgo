@@ -1,0 +1,28 @@
+[exercise]
+name = "goroutine_lifecycle"
+category = "54_concurrency_practice"
+difficulty = 4
+estimated_time = "20m"
+
+[description]
+title = "Goroutine Lifecycle Management"
+summary = "Learn to prevent goroutine leaks and avoid loop variable capture bugs"
+learning_objectives = [
+  "Detect goroutine leaks caused by blocking channels with no cancellation",
+  "Use context.WithCancel to control goroutine lifetimes",
+  "Understand why loop variable capture causes all goroutines to see the last value",
+  "Fix closure captures by passing loop variables as function parameters"
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = "For the leak: the producer needs a way to know when to stop. Context cancellation is the idiomatic approach."
+level_2 = "Change leakyProducer to accept a context.Context and use select with ctx.Done() alongside the channel send."
+level_3 = "For loop capture: change 'go func() { ... item ... }()' to 'go func(val string) { ... val ... }(item)' to give each goroutine its own copy."
+
+[metadata]
+tags = ["concurrency", "goroutines", "leaks", "closures", "100-go-mistakes", "mistake-62", "mistake-63"]
+related_exercises = ["11_concurrency/goroutines_basics.go"]

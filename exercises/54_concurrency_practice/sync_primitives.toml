@@ -1,0 +1,28 @@
+[exercise]
+name = "sync_primitives"
+category = "54_concurrency_practice"
+difficulty = 4
+estimated_time = "25m"
+
+[description]
+title = "Sync Primitives"
+summary = "Master WaitGroup, sync.Cond, error collection from goroutines, and avoid copying sync types"
+learning_objectives = [
+  "Call WaitGroup.Add before launching the goroutine, never inside it",
+  "Use sync.Cond with a for loop (not if) and Broadcast for shutdown signaling",
+  "Collect errors from concurrent goroutines using a buffered error channel",
+  "Never copy sync types - always pass structs containing them as pointers"
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = "WaitGroup: wg.Add(1) must be called BEFORE the go statement. If it's inside the goroutine, Wait() might return before Add() is called."
+level_2 = "sync.Cond: Always use 'for condition { cond.Wait() }' not 'if condition { cond.Wait() }'. Use Broadcast() to wake all waiters when shutting down."
+level_3 = "Copying sync: 'func f(m SafeMap)' copies the struct including its mutex. Change to 'func f(m *SafeMap)' and ensure constructors return pointers."
+
+[metadata]
+tags = ["concurrency", "sync", "waitgroup", "cond", "errgroup", "mutex", "100-go-mistakes", "mistake-71", "mistake-72", "mistake-73", "mistake-74"]
+related_exercises = ["11_concurrency/sync_primitives.go"]

@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
-	
+
 	"github.com/stonecharioteer/goforgo/internal/exercise"
 )
 
@@ -68,39 +67,8 @@ completed_exercises = []
 }
 
 func copyExerciseFiles(baseDir string) error {
-	sourceExercises := ""
-	sourceSolutions := ""
-
-	execPath, err := os.Executable()
+	sourceExercises, sourceSolutions, err := findExerciseSourceDirs()
 	if err != nil {
-		execPath = ""
-	}
-
-	var possiblePaths []string
-	if execPath != "" {
-		execDir := filepath.Dir(execPath)
-		possiblePaths = append(possiblePaths,
-			filepath.Join(execDir, "exercises"),
-			filepath.Join(execDir, "..", "exercises"),
-			filepath.Join(execDir, "..", "..", "exercises"),
-		)
-	}
-
-	possiblePaths = append(possiblePaths,
-		"exercises",
-		"../exercises",
-		"../../exercises",
-	)
-
-	for _, path := range possiblePaths {
-		if _, err := os.Stat(path); err == nil {
-			sourceExercises = path
-			sourceSolutions = strings.Replace(path, "exercises", "solutions", 1)
-			break
-		}
-	}
-
-	if sourceExercises == "" {
 		fmt.Println("⚠️  No source exercises found, creating basic hello exercise")
 		return createPlaceholderExercise(filepath.Join(baseDir, "exercises", "01_basics"))
 	}

@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -72,13 +73,7 @@ func (h *HTTPRouteValidator) GetRequiredServices() []string { return []string{} 
 func (h *HTTPRouteValidator) GetDependencies() []string { return []string{} }
 
 func (h *HTTPRouteValidator) Validate(ctx context.Context, request *ValidationRuleRequest) (*RuleResult, error) {
-	// Implementation will test HTTP routes, check response codes, validate JSON, etc.
-	return &RuleResult{
-		RuleName: h.GetName(),
-		RuleType: h.GetType(),
-		Passed:   true, // Placeholder
-		Output:   "HTTP routes validation passed",
-	}, nil
+	return nil, fmt.Errorf("validator %q not yet implemented", h.GetType())
 }
 
 // DatabaseValidator runs queries, checks schemas, validates transactions
@@ -90,13 +85,7 @@ func (d *DatabaseValidator) GetRequiredServices() []string { return []string{"po
 func (d *DatabaseValidator) GetDependencies() []string { return []string{} }
 
 func (d *DatabaseValidator) Validate(ctx context.Context, request *ValidationRuleRequest) (*RuleResult, error) {
-	// Implementation will connect to database, run queries, check schemas, etc.
-	return &RuleResult{
-		RuleName: d.GetName(),
-		RuleType: d.GetType(),
-		Passed:   true, // Placeholder
-		Output:   "Database validation passed",
-	}, nil
+	return nil, fmt.Errorf("validator %q not yet implemented", d.GetType())
 }
 
 // ProcessValidator monitors processes, goroutines, resource usage
@@ -108,13 +97,7 @@ func (p *ProcessValidator) GetRequiredServices() []string { return []string{} }
 func (p *ProcessValidator) GetDependencies() []string { return []string{} }
 
 func (p *ProcessValidator) Validate(ctx context.Context, request *ValidationRuleRequest) (*RuleResult, error) {
-	// Implementation will monitor process behavior, check resource usage, etc.
-	return &RuleResult{
-		RuleName: p.GetName(),
-		RuleType: p.GetType(),
-		Passed:   true, // Placeholder
-		Output:   "Process validation passed",
-	}, nil
+	return nil, fmt.Errorf("validator %q not yet implemented", p.GetType())
 }
 
 // NetworkValidator tests TCP/UDP servers, client connections
@@ -126,13 +109,7 @@ func (n *NetworkValidator) GetRequiredServices() []string { return []string{} }
 func (n *NetworkValidator) GetDependencies() []string { return []string{} }
 
 func (n *NetworkValidator) Validate(ctx context.Context, request *ValidationRuleRequest) (*RuleResult, error) {
-	// Implementation will test network connections, socket communication, etc.
-	return &RuleResult{
-		RuleName: n.GetName(),
-		RuleType: n.GetType(),
-		Passed:   true, // Placeholder
-		Output:   "Network validation passed",
-	}, nil
+	return nil, fmt.Errorf("validator %q not yet implemented", n.GetType())
 }
 
 // ConcurrencyValidator detects race conditions, deadlocks, sync primitives
@@ -144,13 +121,7 @@ func (c *ConcurrencyValidator) GetRequiredServices() []string { return []string{
 func (c *ConcurrencyValidator) GetDependencies() []string { return []string{} }
 
 func (c *ConcurrencyValidator) Validate(ctx context.Context, request *ValidationRuleRequest) (*RuleResult, error) {
-	// Implementation will use race detector, analyze goroutine patterns, etc.
-	return &RuleResult{
-		RuleName: c.GetName(),
-		RuleType: c.GetType(),
-		Passed:   true, // Placeholder
-		Output:   "Concurrency validation passed",
-	}, nil
+	return nil, fmt.Errorf("validator %q not yet implemented", c.GetType())
 }
 
 // MetricsValidator checks Prometheus metrics, custom counters
@@ -162,13 +133,7 @@ func (m *MetricsValidator) GetRequiredServices() []string { return []string{"pro
 func (m *MetricsValidator) GetDependencies() []string { return []string{} }
 
 func (m *MetricsValidator) Validate(ctx context.Context, request *ValidationRuleRequest) (*RuleResult, error) {
-	// Implementation will scrape metrics endpoints, validate counter values, etc.
-	return &RuleResult{
-		RuleName: m.GetName(),
-		RuleType: m.GetType(),
-		Passed:   true, // Placeholder
-		Output:   "Metrics validation passed",
-	}, nil
+	return nil, fmt.Errorf("validator %q not yet implemented", m.GetType())
 }
 
 // LogValidator validates structured logs, error patterns
@@ -180,11 +145,5 @@ func (l *LogValidator) GetRequiredServices() []string { return []string{} }
 func (l *LogValidator) GetDependencies() []string { return []string{} }
 
 func (l *LogValidator) Validate(ctx context.Context, request *ValidationRuleRequest) (*RuleResult, error) {
-	// Implementation will parse logs, check for patterns, validate structured logging, etc.
-	return &RuleResult{
-		RuleName: l.GetName(),
-		RuleType: l.GetType(),
-		Passed:   true, // Placeholder
-		Output:   "Log validation passed",
-	}, nil
+	return nil, fmt.Errorf("validator %q not yet implemented", l.GetType())
 }

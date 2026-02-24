@@ -1,0 +1,39 @@
+[exercise]
+name = "numeric_pitfalls"
+category = "48_data_types"
+order = 1
+difficulty = 3
+estimated_time = "20m"
+
+[description]
+title = "Numeric Pitfalls"
+summary = "Fix bugs caused by octal literal confusion, integer overflow, and floating-point comparison"
+learning_objectives = [
+  "Understand that 0-prefixed integer literals are octal in Go",
+  "Recognize silent integer overflow and choose appropriate types",
+  "Use epsilon-based comparison for floating-point values",
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Numeric Pitfalls ===
+
+--- Octal Literals ---
+File permission: 420 (octal: 644)
+PASS: Correct octal permission value
+
+--- Integer Overflow ---
+Factorial of 6 = 720
+
+--- Float Comparison ---
+0.1 + 0.2 == 0.3: true (correct)
+Large float absorbed small value (precision lost!)"""
+timeout = "30s"
+
+[hints]
+level_1 = """Go supports explicit octal prefix with 0o (e.g., 0o644). A plain 644 is decimal, not octal."""
+level_2 = """int8 can only hold -128 to 127. Use a wider type like int or int64 for larger values."""
+level_3 = """For float comparison, use math.Abs(a - b) < epsilon where epsilon is a small value like 1e-9."""
+
+[metadata]
+tags = ["numerics", "octal", "overflow", "floating-point", "100-go-mistakes"]

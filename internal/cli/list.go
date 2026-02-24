@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -31,15 +32,8 @@ Examples:
 }
 
 func listExercises(cmd *cobra.Command, args []string) error {
-	// Get working directory
-	cwd, err := GetWorkingDirectory()
+	em, _, err := loadExerciseManager()
 	if err != nil {
-		return fmt.Errorf("failed to get working directory: %w", err)
-	}
-
-	// Initialize exercise manager
-	em := exercise.NewExerciseManager(cwd)
-	if err := em.LoadExercises(); err != nil {
 		return err
 	}
 
@@ -74,16 +68,10 @@ func listExercises(cmd *cobra.Command, args []string) error {
 		}
 		
 		// Sort exercises within each category by name for consistent ordering
-		for category, exercises := range categoryExercises {
-			// Simple sort by exercise name
-			for i := 0; i < len(exercises); i++ {
-				for j := i + 1; j < len(exercises); j++ {
-					if exercises[i].Info.Name > exercises[j].Info.Name {
-						exercises[i], exercises[j] = exercises[j], exercises[i]
-					}
-				}
-			}
-			categoryExercises[category] = exercises
+		for _, exercises := range categoryExercises {
+			sort.Slice(exercises, func(i, j int) bool {
+				return exercises[i].Info.Name < exercises[j].Info.Name
+			})
 		}
 		
 		// Output exercises with proper numbering

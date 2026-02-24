@@ -1,0 +1,27 @@
+[exercise]
+name = "inlining_diagnostics"
+category = "57_optimizations"
+difficulty = 4
+estimated_time = "20m"
+
+[description]
+title = "Function Inlining and Runtime Diagnostics"
+summary = "Simplify functions for inlining and use runtime diagnostics tools"
+learning_objectives = [
+  "Understand how the Go compiler decides which functions to inline",
+  "Keep hot-path functions small and simple for inlining eligibility",
+  "Use runtime.NumGoroutine, runtime.NumCPU, and runtime.GOMAXPROCS for diagnostics",
+  "Read and interpret runtime.MemStats for memory analysis"
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = """The Go compiler inlines functions with a low AST node budget (~80 nodes). Simple arithmetic, direct returns, and small control flow fit within this budget. Complex branching, loops over slices, and multiple conditions exceed it."""
+level_2 = """For multiplyInlineable: the Go * operator already handles negative numbers and zero correctly. Replace the entire function body with just `return a * b`. For diagnostics: use runtime.NumGoroutine(), runtime.NumCPU(), runtime.GOMAXPROCS(0), and runtime.ReadMemStats(&stats)."""
+level_3 = """multiplyInlineable should be: func multiplyInlineable(a, b int) int { return a * b }. For printDiagnostics: add fmt.Printf with runtime.NumGoroutine(), runtime.NumCPU(), runtime.GOMAXPROCS(0). Then var m runtime.MemStats; runtime.ReadMemStats(&m); print m.Alloc, m.TotalAlloc, m.Sys, m.NumGC."""
+
+[metadata]
+tags = ["inlining", "diagnostics", "profiling", "runtime", "100-go-mistakes"]

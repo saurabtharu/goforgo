@@ -1,0 +1,28 @@
+[exercise]
+name = "slice_map_leaks"
+category = "48_data_types"
+order = 5
+difficulty = 4
+estimated_time = "20m"
+
+[description]
+title = "Slice and Map Memory Leaks"
+summary = "Fix memory leaks from sub-slices retaining large backing arrays and inefficient map usage"
+learning_objectives = [
+  "Understand that sub-slices keep the entire backing array alive in memory",
+  "Copy sub-slice data to right-sized slices to allow garbage collection",
+  "Provide size hints to make(map) for better performance",
+  "Know that maps never shrink and must be re-created to free memory",
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = """A sub-slice like s[5:10] still references the original backing array. If the original was huge, all that memory stays alive."""
+level_2 = """To fix the memory leak: create a new slice with make([]T, len(sub)), then copy(new, sub). This lets the old backing array be GC'd."""
+level_3 = """For maps, use make(map[K]V, expectedSize) when you know the size. To reclaim memory from a map with many deletions, create a new map and copy remaining entries."""
+
+[metadata]
+tags = ["slices", "maps", "memory-leak", "garbage-collection", "size-hint", "100-go-mistakes"]

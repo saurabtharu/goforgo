@@ -1,0 +1,27 @@
+[exercise]
+name = "memory_alignment"
+category = "57_optimizations"
+difficulty = 4
+estimated_time = "20m"
+
+[description]
+title = "Memory Alignment and Data Dependencies"
+summary = "Optimize struct field ordering for memory efficiency and break data dependency chains"
+learning_objectives = [
+  "Understand how struct padding wastes memory in Go",
+  "Reorder struct fields to minimize alignment padding",
+  "Use unsafe.Sizeof to measure struct memory footprint",
+  "Break data dependency chains with multiple accumulators"
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = """The Go compiler aligns struct fields to their natural boundaries. An int64 needs 8-byte alignment, int32 needs 4-byte, int16 needs 2-byte, and bool/byte need 1-byte. Padding is inserted between fields when the next field's alignment doesn't match the current offset."""
+level_2 = """For OptimizedStruct, put all 8-byte fields first (ID, Value, Timestamp), then 4-byte fields (Count, Flags), then 2-byte fields (Priority, Category), then 1-byte fields (Active, Enabled, Tag). This minimizes padding gaps."""
+level_3 = """OptimizedStruct optimal order: ID int64, Value float64, Timestamp int64, Count int32, Flags int32, Priority int16, Category int16, Active bool, Enabled bool, Tag byte. For sumParallel, use: var t1, t2 int64; loop with i stepping by 2, t1 += data[i], t2 += data[i+1]; handle odd length; return t1+t2."""
+
+[metadata]
+tags = ["alignment", "padding", "structs", "performance", "100-go-mistakes"]

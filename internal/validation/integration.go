@@ -40,15 +40,13 @@ func (ur *UniversalRunner) ValidateExercise(ctx context.Context, ex *exercise.Ex
 	}
 }
 
-// shouldUseUniversalValidation determines if an exercise should use the universal validation system
+// shouldUseUniversalValidation determines if an exercise should use the universal validation system.
+// Currently always returns false because the universal validators are not yet implemented.
+// Exercises with mode="universal" fall back to the legacy runner with a warning.
 func (ur *UniversalRunner) shouldUseUniversalValidation(ex *exercise.Exercise) bool {
-	// Check if validation mode is explicitly set to "universal"
 	if ex.Validation.Mode == "universal" {
-		return true
+		log.Printf("⚠️  Exercise %q has mode=universal but universal validators are not yet implemented; falling back to legacy runner", ex.Info.Name)
 	}
-	
-	// TODO: Later, we can check for presence of services or rules in TOML
-	// For now, only exercises explicitly marked as "universal" will use the new system
 	return false
 }
 

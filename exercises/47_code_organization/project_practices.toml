@@ -1,0 +1,45 @@
+[exercise]
+name = "project_practices"
+category = "47_code_organization"
+difficulty = 2
+estimated_time = "15m"
+
+[description]
+title = "Project Practices"
+summary = "Fix common Go anti-patterns: naming conventions, getters, utility packages"
+learning_objectives = [
+  "Remove Java-style Get/Set methods in favor of Go conventions",
+  "Rename stuttering type names (e.g., UserUser -> User)",
+  "Break up utility grab-bags into properly named functions",
+  "Follow Go naming conventions for exported types and fields"
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Project Practices ===
+
+--- User (fix Get/Set anti-pattern) ---
+Name: Alice
+Email: alice@example.com
+Age: 30
+Updated: Bob <bob@example.com> (age 25)
+
+--- StringUtils (fix utils anti-pattern) ---
+Reverse 'hello': olleh
+Capitalize 'hello world': Hello World
+Vowels in 'beautiful': 5
+
+--- Config (fix stuttering names) ---
+Config value: production
+Config type: environment
+
+Project practices fixed!"""
+timeout = "30s"
+
+[hints]
+level_1 = """In Go, getters don't use 'Get' prefix. Instead of GetName(), just use Name(). Rename UserUser to User. Replace the StringUtils struct with standalone functions."""
+level_2 = """For User: rename GetName() to Name(), GetEmail() to Email(), GetAge() to Age(). Remove SetX methods and export fields directly, or keep unexported fields with Go-style accessors."""
+level_3 = """Rename UserUser to User, ConfigConfig to Config. Remove Get prefix from accessors. Replace StringUtils methods with standalone functions: reverseString(), capitalizeWords(), countVowels(). Remove ConfigValue/ConfigType stuttering to Value/Type."""
+
+[metadata]
+tags = ["naming", "conventions", "getters", "utility-packages", "100-go-mistakes"]

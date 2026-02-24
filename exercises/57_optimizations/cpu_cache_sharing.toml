@@ -1,0 +1,27 @@
+[exercise]
+name = "cpu_cache_sharing"
+category = "57_optimizations"
+difficulty = 5
+estimated_time = "25m"
+
+[description]
+title = "CPU Cache and False Sharing"
+summary = "Fix cache-unfriendly access patterns and false sharing between goroutines"
+learning_objectives = [
+  "Understand how CPU cache lines affect memory access performance",
+  "Recognize column-major vs row-major traversal and their cache implications",
+  "Identify false sharing when goroutines update adjacent memory locations",
+  "Use struct padding to separate data onto different cache lines"
+]
+
+[validation]
+mode = "run"
+timeout = "60s"
+
+[hints]
+level_1 = """Row-major traversal means the outer loop iterates over rows and the inner loop over columns. In Go, a 2D array [M][N]int64 stores row 0 first, then row 1, etc. Accessing elements row by row is sequential in memory."""
+level_2 = """For false sharing, add a padding field between CounterA and CounterB. A cache line is 64 bytes. An int64 is 8 bytes. So you need [56]byte of padding after CounterA: `CounterA int64; _pad [56]byte; CounterB int64`"""
+level_3 = """Fix sumMatrixRowMajor: swap the loop order so `for row := ...` is outer and `for col := ...` is inner. Fix PaddedCounters: add `_pad [56]byte` between CounterA and CounterB to force them onto separate cache lines."""
+
+[metadata]
+tags = ["cache", "false-sharing", "performance", "concurrency", "100-go-mistakes"]

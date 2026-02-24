@@ -1,0 +1,28 @@
+[exercise]
+name = "data_race_patterns"
+category = "54_concurrency_practice"
+difficulty = 4
+estimated_time = "20m"
+
+[description]
+title = "Data Race Patterns"
+summary = "Identify and fix the three most common data race patterns in Go"
+learning_objectives = [
+  "Protect shared struct fields with a mutex when concurrent goroutines read and write",
+  "Replace concurrent slice appends with channel-based collection",
+  "Avoid copying sync.Mutex by passing structs containing mutexes as pointers",
+  "Use go run -race to detect data races at runtime"
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = "Formatting race: Both readUser and updateUser access shared fields. They both need to hold the same mutex."
+level_2 = "Append race: Instead of 'results = append(results, val)' from goroutines, send values through a buffered channel and collect after wg.Wait()."
+level_3 = "Mutex copy: 'incrementMany(c Counter, n int)' passes Counter by value, copying the mutex. Change to 'incrementMany(c *Counter, n int)' and update the call site."
+
+[metadata]
+tags = ["concurrency", "data-race", "mutex", "channels", "100-go-mistakes", "mistake-68", "mistake-69", "mistake-70"]
+related_exercises = ["11_concurrency/sync_primitives.go"]

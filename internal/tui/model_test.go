@@ -97,12 +97,12 @@ func TestModelInitialization(t *testing.T) {
 		t.Error("Current exercise should be set")
 	}
 
-	if model.totalCount != 1 {
-		t.Errorf("Expected total count 1, got %d", model.totalCount)
+	if model.getTotalCount() != 1 {
+		t.Errorf("Expected total count 1, got %d", model.getTotalCount())
 	}
 
-	if !model.showWelcome {
-		t.Error("Should show welcome screen initially")
+	if model.viewMode != ViewSplash {
+		t.Error("Should show splash screen initially")
 	}
 }
 
@@ -141,19 +141,34 @@ func TestModelUpdate(t *testing.T) {
 			msg:  tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("h")},
 			setupModel: func(m *Model) {
 				m.ready = true
-				m.showingHint = false
+				m.viewMode = ViewMain
 			},
-			wantState: func(m *Model) bool { return m.showingHint },
+			wantState: func(m *Model) bool { return m.viewMode == ViewHint },
 			wantCmd:   false,
 		},
 		{
-			name: "toggle hint off on h when showing",
+			name: "advance hint on h when showing (level < max)",
 			msg:  tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("h")},
 			setupModel: func(m *Model) {
 				m.ready = true
-				m.showingHint = true
+				m.viewMode = ViewHint
+				m.currentHintLevel = 1
 			},
-			wantState: func(m *Model) bool { return !m.showingHint },
+			wantState: func(m *Model) bool {
+				// Test exercise has 3 hint levels, so pressing h advances to level 2
+				return m.viewMode == ViewHint && m.currentHintLevel == 2
+			},
+			wantCmd: false,
+		},
+		{
+			name: "hide hint on h when at max level",
+			msg:  tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("h")},
+			setupModel: func(m *Model) {
+				m.ready = true
+				m.viewMode = ViewHint
+				m.currentHintLevel = 3
+			},
+			wantState: func(m *Model) bool { return m.viewMode == ViewMain },
 			wantCmd:   false,
 		},
 		{
@@ -161,9 +176,9 @@ func TestModelUpdate(t *testing.T) {
 			msg:  tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("l")},
 			setupModel: func(m *Model) {
 				m.ready = true
-				m.showingList = false
+				m.viewMode = ViewMain
 			},
-			wantState: func(m *Model) bool { return m.showingList },
+			wantState: func(m *Model) bool { return m.viewMode == ViewList },
 			wantCmd:   false,
 		},
 		{
@@ -171,9 +186,9 @@ func TestModelUpdate(t *testing.T) {
 			msg:  tea.KeyMsg{Type: tea.KeyEnter},
 			setupModel: func(m *Model) {
 				m.ready = true
-				m.showWelcome = true
+				m.viewMode = ViewWelcome
 			},
-			wantState: func(m *Model) bool { return !m.showWelcome },
+			wantState: func(m *Model) bool { return m.viewMode != ViewWelcome },
 			wantCmd:   false,
 		},
 		{
@@ -181,10 +196,9 @@ func TestModelUpdate(t *testing.T) {
 			msg:  tea.KeyMsg{Type: tea.KeyEnter},
 			setupModel: func(m *Model) {
 				m.ready = true
-				m.showingHint = true
-				m.showWelcome = false
+				m.viewMode = ViewHint
 			},
-			wantState: func(m *Model) bool { return !m.showingHint },
+			wantState: func(m *Model) bool { return m.viewMode != ViewHint },
 			wantCmd:   false,
 		},
 		{
@@ -192,10 +206,9 @@ func TestModelUpdate(t *testing.T) {
 			msg:  tea.KeyMsg{Type: tea.KeyEsc},
 			setupModel: func(m *Model) {
 				m.ready = true
-				m.showingList = true
-				m.showWelcome = false
+				m.viewMode = ViewList
 			},
-			wantState: func(m *Model) bool { return !m.showingList },
+			wantState: func(m *Model) bool { return m.viewMode != ViewList },
 			wantCmd:   false,
 		},
 		{
@@ -241,7 +254,7 @@ func TestModelUpdate(t *testing.T) {
 			wantState: func(m *Model) bool {
 				return !m.isRunning && m.lastResult != nil && m.lastResult.Success
 			},
-			wantCmd: false,
+			wantCmd: true, // waitForFileChange command is returned
 		},
 		{
 			name: "exercise running sets state",
@@ -460,16 +473,15 @@ func TestModelView(t *testing.T) {
 			name: "welcome screen shows welcome",
 			setupModel: func(m *Model) {
 				m.ready = true
-				m.showWelcome = true
+				m.viewMode = ViewWelcome
 			},
-			expectString: "Welcome to...",
+			expectString: "Interactive Go Learning Platform",
 		},
 		{
 			name: "hint view shows hint",
 			setupModel: func(m *Model) {
 				m.ready = true
-				m.showWelcome = false
-				m.showingHint = true
+				m.viewMode = ViewHint
 			},
 			expectString: "Hint",
 		},
@@ -477,8 +489,7 @@ func TestModelView(t *testing.T) {
 			name: "list view shows exercise list",
 			setupModel: func(m *Model) {
 				m.ready = true
-				m.showWelcome = false
-				m.showingList = true
+				m.viewMode = ViewList
 			},
 			expectString: "Exercise List",
 		},

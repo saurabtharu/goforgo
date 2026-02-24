@@ -199,15 +199,7 @@ func (to *TestOrchestrator) startServices(ctx context.Context, request *Validati
 
 // buildExercise builds the exercise code
 func (to *TestOrchestrator) buildExercise(ctx context.Context, request *ValidationRequest) error {
-	// This will integrate with the existing runner system for building
-	// For now, just simulate the build process
-	log.Printf("  🔧 Building Go code at %s", request.Exercise.FilePath)
-	
-	// TODO: Integrate with existing internal/runner build logic
-	// runner := runner.NewRunner(request.WorkingDir)
-	// return runner.BuildExercise(ctx, request.Exercise)
-	
-	return nil // Placeholder
+	return fmt.Errorf("universal validation buildExercise not yet implemented (exercise %q)", request.Exercise.Info.Name)
 }
 
 // executeValidationRules executes all validation rules in the appropriate order
@@ -372,16 +364,7 @@ func (to *TestOrchestrator) determineOverallSuccess(result *ValidationResult) bo
 }
 
 func (to *TestOrchestrator) validateLegacyMode(ctx context.Context, ex *exercise.Exercise, workingDir string, config *EnhancedExerciseValidation) (*ValidationResult, error) {
-	// Fallback to existing runner system for backward compatibility
-	log.Printf("📄 Using legacy validation mode: %s", config.Mode)
-	
-	// TODO: Integrate with existing internal/runner system
-	return &ValidationResult{
-		Success:           true, // Placeholder
-		ServiceResults:    make(map[string]*ServiceResult),
-		ValidationResults: make(map[string]*RuleResult),
-		Environment:       make(map[string]string),
-	}, nil
+	return nil, fmt.Errorf("orchestrator.validateLegacyMode not yet implemented (exercise %q, mode %q)", ex.Info.Name, config.Mode)
 }
 
 func (to *TestOrchestrator) cleanup(ctx context.Context, result *ValidationResult) error {

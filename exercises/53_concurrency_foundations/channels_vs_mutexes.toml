@@ -1,0 +1,36 @@
+[exercise]
+name = "channels_vs_mutexes"
+category = "53_concurrency_foundations"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Channels vs Mutexes"
+summary = "Learn when to use channels (communication) vs mutexes (shared state) by refactoring code that uses the wrong primitive"
+learning_objectives = [
+  "Use sync.Mutex for protecting shared state like counters and caches",
+  "Use channels for communication between goroutines and building pipelines",
+  "Recognize overcomplicated channel-based shared state patterns",
+  "Recognize unnatural mutex-based communication patterns with spin-waiting",
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = "Part 1: Create a SafeCounter struct with a sync.Mutex and an int field. Add Increment() and Value() methods."
+level_2 = "Part 2: generate() sends values into a channel then closes it. double() ranges over input channel, sends doubled values to output channel."
+level_3 = """Part 2 channel pipeline pattern:
+  func generate(vals []int) <-chan int {
+    out := make(chan int)
+    go func() {
+      for _, v := range vals { out <- v }
+      close(out)
+    }()
+    return out
+  }
+Then double() and collect() follow the same pattern, chaining channels."""
+
+[metadata]
+tags = ["channels", "mutex", "synchronization", "pipelines", "100-go-mistakes"]

@@ -1,0 +1,54 @@
+[exercise]
+name = "sql_resources"
+category = "55_standard_library"
+difficulty = 3
+estimated_time = "20m"
+
+[description]
+title = "SQL Resource Management"
+summary = "Fix simulated database resource leaks: close result rows, check iteration errors, and configure connection pool settings."
+learning_objectives = [
+  "Always defer rows.Close() immediately after a query",
+  "Check rows.Err() after iteration to catch mid-scan errors",
+  "Configure MaxOpenConns, MaxIdleConns, and ConnMaxLifetime for production use",
+  "Understand connection pool defaults and why they're dangerous",
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = """
+When you call db.Query(), the returned rows hold an open database connection.
+If you don't call rows.Close(), that connection is never returned to the pool.
+Use defer to ensure cleanup happens even if you return early.
+"""
+
+level_2 = """
+Three fixes needed:
+1. In queryUsers(): Add `defer rows.Close()` right after db.Query()
+2. In queryUsersWithErrorCheck(): After the for loop, check `rows.Err()`
+   and return the error if non-nil
+3. In testConnectionPool(): Call db.SetMaxOpenConns(25),
+   db.SetMaxIdleConns(10), db.SetConnMaxLifetime(5 * time.Minute)
+"""
+
+level_3 = """
+Fix 1 - Close rows:
+  rows := db.Query("SELECT name FROM users")
+  defer rows.Close()
+
+Fix 2 - Check rows.Err():
+  if err := rows.Err(); err != nil {
+      return names, err
+  }
+
+Fix 3 - Pool config:
+  db.SetMaxOpenConns(25)
+  db.SetMaxIdleConns(10)
+  db.SetConnMaxLifetime(5 * time.Minute)
+"""
+
+[metadata]
+tags = ["sql", "database", "resources", "connection-pool", "rows", "100-go-mistakes", "mistake-78", "mistake-79"]

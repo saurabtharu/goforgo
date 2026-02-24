@@ -1,0 +1,65 @@
+[exercise]
+name = "functional_options"
+category = "47_code_organization"
+difficulty = 3
+estimated_time = "20m"
+
+[description]
+title = "Functional Options"
+summary = "Refactor a constructor with too many parameters using the functional options pattern"
+learning_objectives = [
+  "Recognize the problem with long parameter lists",
+  "Implement the functional options pattern",
+  "Define Option types and With... constructor functions",
+  "Set sensible defaults that options can override"
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Functional Options Pattern ===
+
+--- Client 1: Defaults ---
+HTTPClient Configuration:
+  Base URL:         https://api.example.com
+  Timeout:          30s
+  Max Retries:      3
+  Retry Delay:      1s
+  Follow Redirect:  true
+  Max Redirects:    10
+  User Agent:       GoForGo/1.0
+  Custom Headers:
+
+--- Client 2: Custom timeout ---
+HTTPClient Configuration:
+  Base URL:         https://slow.example.com
+  Timeout:          1m0s
+  Max Retries:      5
+  Retry Delay:      2s
+  Follow Redirect:  true
+  Max Redirects:    10
+  User Agent:       GoForGo/1.0
+  Custom Headers:
+
+--- Client 3: Full custom ---
+HTTPClient Configuration:
+  Base URL:         https://internal.example.com
+  Timeout:          10s
+  Max Retries:      3
+  Retry Delay:      1s
+  Follow Redirect:  false
+  Max Redirects:    0
+  User Agent:       InternalBot/2.0
+  Custom Headers:
+    Authorization: Bearer token123
+    X-Request-ID: abc-456
+
+Functional options refactoring complete!"""
+timeout = "30s"
+
+[hints]
+level_1 = """Define 'type Option func(*HTTPClient)' and create functions like WithTimeout(d time.Duration) Option that return a closure modifying the client."""
+level_2 = """Change NewHTTPClient to accept (baseURL string, opts ...Option). Set defaults first, then loop over opts and apply each one: for _, opt := range opts { opt(c) }."""
+level_3 = """Create: WithTimeout, WithMaxRetries, WithRetryDelay, WithNoRedirects, WithUserAgent, WithHeader. In NewHTTPClient, set defaults (30s timeout, 3 retries, etc.), then apply options. Client 1 uses no options, Client 2 uses WithTimeout+WithMaxRetries+WithRetryDelay, Client 3 uses all custom options."""
+
+[metadata]
+tags = ["functional-options", "constructors", "API-design", "patterns", "100-go-mistakes"]

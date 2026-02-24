@@ -8,6 +8,33 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
+// Layout and animation constants.
+const (
+	contentPadding      = 10
+	minContentWidth     = 50
+	maxContentWidth     = 90
+	borderCharWidth     = 80
+	progressBarWidth    = 30
+	splashFrameCount    = 8
+	splashTickMs        = 250
+	listReservedHeight  = 8
+	minListHeight       = 10
+	columnPaddingFactor = 1.1
+	minColumnWidth      = 3
+)
+
+// getContentWidth returns the usable content width for the current terminal size.
+func (m *Model) getContentWidth() int {
+	w := m.width - contentPadding
+	if w < minContentWidth {
+		w = minContentWidth
+	}
+	if w > maxContentWidth {
+		w = maxContentWidth
+	}
+	return w
+}
+
 // renderWelcome shows the welcome screen (like Rustlings)
 func (m *Model) renderWelcome() string {
 	// Beautiful GoForGo text logo
@@ -38,7 +65,7 @@ func (m *Model) renderWelcome() string {
 	subtitle := subtitleStyle.Render("🚀 Interactive Go Learning Platform 🚀")
 
 	// Stats section with progress - use dynamic completed count
-	progressBar := m.renderProgressBar(m.getCompletedCount(), m.getTotalCount(), 30)
+	progressBar := m.renderProgressBar(m.getCompletedCount(), m.getTotalCount(), progressBarWidth)
 
 	statsStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#10B981")).
@@ -125,7 +152,7 @@ func (m *Model) renderWelcome() string {
 
 	// Add decorative border using text characters
 	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED"))
-	borderLine := borderStyle.Render(strings.Repeat("═", 80))
+	borderLine := borderStyle.Render(strings.Repeat("═", borderCharWidth))
 
 	welcomeText = fmt.Sprintf(`%s
 %s
@@ -134,13 +161,7 @@ func (m *Model) renderWelcome() string {
 	// Center and style the entire content
 	// Account for border (2 chars) and padding (4 chars) = 6 chars total
 	// Add extra margin for safety
-	contentWidth := m.width - 10
-	if contentWidth < 50 {
-		contentWidth = 50 // Minimum readable width
-	}
-	if contentWidth > 90 {
-		contentWidth = 90 // Maximum width to prevent overly wide content
-	}
+	contentWidth := m.getContentWidth()
 
 	// Use a simpler approach without overall border to avoid width issues
 	style := lipgloss.NewStyle().
@@ -183,20 +204,14 @@ func (m *Model) renderMain() string {
 
 	// Add decorative border using text characters
 	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED"))
-	borderLine := borderStyle.Render(strings.Repeat("═", 80))
+	borderLine := borderStyle.Render(strings.Repeat("═", borderCharWidth))
 
 	borderedContent := fmt.Sprintf(`%s
 %s
 %s`, borderLine, mainContent, borderLine)
 
 	// Center and style the content consistently
-	contentWidth := m.width - 10
-	if contentWidth < 50 {
-		contentWidth = 50 // Minimum readable width
-	}
-	if contentWidth > 90 {
-		contentWidth = 90 // Maximum width to prevent overly wide content
-	}
+	contentWidth := m.getContentWidth()
 
 	style := lipgloss.NewStyle().
 		Width(contentWidth).
@@ -212,7 +227,7 @@ func (m *Model) renderHeader() string {
 	progressPercent := int(progress * 100)
 
 	// Use the existing renderProgressBar function with a reasonable width
-	progressBar := m.renderProgressBar(m.getCompletedCount(), m.getTotalCount(), 30)
+	progressBar := m.renderProgressBar(m.getCompletedCount(), m.getTotalCount(), progressBarWidth)
 	progressText := fmt.Sprintf("%d/%d (%d%%)", m.getCompletedCount(), m.getTotalCount(), progressPercent)
 
 	header := fmt.Sprintf(`%s
@@ -423,13 +438,7 @@ func (m *Model) renderSplash() string {
 🚀 Interactive Go Tutorial Platform 🚀`, logo, subtitle)
 
 	// Center and style the splash consistently with other views
-	contentWidth := m.width - 10
-	if contentWidth < 50 {
-		contentWidth = 50
-	}
-	if contentWidth > 90 {
-		contentWidth = 90
-	}
+	contentWidth := m.getContentWidth()
 
 	style := lipgloss.NewStyle().
 		Width(contentWidth).
@@ -494,20 +503,14 @@ func (m *Model) renderHint() string {
 
 	// Apply consistent border styling
 	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#F59E0B"))
-	borderLine := borderStyle.Render(strings.Repeat("═", 80))
+	borderLine := borderStyle.Render(strings.Repeat("═", borderCharWidth))
 
 	borderedContent := fmt.Sprintf(`%s
 %s
 %s`, borderLine, content, borderLine)
 
 	// Center and style consistently
-	contentWidth := m.width - 10
-	if contentWidth < 50 {
-		contentWidth = 50
-	}
-	if contentWidth > 90 {
-		contentWidth = 90
-	}
+	contentWidth := m.getContentWidth()
 
 	style := lipgloss.NewStyle().
 		Width(contentWidth).
@@ -687,11 +690,11 @@ func (m *Model) renderExerciseList() string {
 		rows = append(rows, row)
 	}
 
-	// Add 10% padding to each column width
+	// Add padding to each column width
 	for i := range maxWidths {
-		maxWidths[i] = int(float64(maxWidths[i]) * 1.1)
-		if maxWidths[i] < 3 { // Minimum width
-			maxWidths[i] = 3
+		maxWidths[i] = int(float64(maxWidths[i]) * columnPaddingFactor)
+		if maxWidths[i] < minColumnWidth {
+			maxWidths[i] = minColumnWidth
 		}
 	}
 
@@ -821,20 +824,14 @@ func (m *Model) renderExerciseList() string {
 	// Apply consistent border styling
 	listContent := content.String()
 	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED"))
-	borderLine := borderStyle.Render(strings.Repeat("═", 80))
+	borderLine := borderStyle.Render(strings.Repeat("═", borderCharWidth))
 
 	borderedContent := fmt.Sprintf(`%s
 %s
 %s`, borderLine, listContent, borderLine)
 
 	// Center and style consistently
-	contentWidth := m.width - 10
-	if contentWidth < 50 {
-		contentWidth = 50
-	}
-	if contentWidth > 90 {
-		contentWidth = 90
-	}
+	contentWidth := m.getContentWidth()
 
 	style := lipgloss.NewStyle().
 		Width(contentWidth).
@@ -1016,20 +1013,14 @@ func (m *Model) renderOutput() string {
 	// Apply consistent border styling
 	outputContent := content.String()
 	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#10B981"))
-	borderLine := borderStyle.Render(strings.Repeat("═", 80))
+	borderLine := borderStyle.Render(strings.Repeat("═", borderCharWidth))
 
 	borderedContent := fmt.Sprintf(`%s
 %s
 %s`, borderLine, outputContent, borderLine)
 
 	// Center and style consistently
-	contentWidth := m.width - 10
-	if contentWidth < 50 {
-		contentWidth = 50
-	}
-	if contentWidth > 90 {
-		contentWidth = 90
-	}
+	contentWidth := m.getContentWidth()
 
 	style := lipgloss.NewStyle().
 		Width(contentWidth).
