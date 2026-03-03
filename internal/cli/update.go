@@ -100,7 +100,7 @@ func updateExerciseFiles(baseDir string, completedExercises map[string]bool) err
 
 	// Update solutions directory too (these are reference solutions)
 	fmt.Println("📂 Updating solutions...")
-	return fs.WalkDir(goforgo.Content, "solutions", func(path string, d fs.DirEntry, err error) error {
+	err = fs.WalkDir(goforgo.Content, "solutions", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -122,6 +122,116 @@ func updateExerciseFiles(baseDir string, completedExercises map[string]bool) err
 		}
 		return os.WriteFile(destPath, content, 0644)
 	})
+	if err != nil {
+		return fmt.Errorf("failed to update solutions: %w", err)
+	}
+
+	// Remove stale files that no longer exist in embedded content
+	fmt.Println("🧹 Cleaning up removed exercises...")
+	removed, err := removeStaleFiles(baseDir)
+	if err != nil {
+		return fmt.Errorf("failed to clean up stale files: %w", err)
+	}
+	if removed > 0 {
+		fmt.Printf("  🗑️  Removed %d stale files\n", removed)
+	}
+
+	return nil
+}
+
+// collectEmbeddedPaths builds a set of all relative file paths in an embedded directory.
+func collectEmbeddedPaths(root string) (map[string]bool, error) {
+	paths := make(map[string]bool)
+	err := fs.WalkDir(goforgo.Content, root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			relPath, relErr := filepath.Rel(root, path)
+			if relErr != nil {
+				return relErr
+			}
+			paths[relPath] = true
+		}
+		return nil
+	})
+	return paths, err
+}
+
+// removeStaleFiles removes files from on-disk exercises/ and solutions/ that
+// no longer exist in the embedded content, then prunes empty directories.
+func removeStaleFiles(baseDir string) (int, error) {
+	removed := 0
+
+	for _, dir := range []string{"exercises", "solutions"} {
+		embeddedPaths, err := collectEmbeddedPaths(dir)
+		if err != nil {
+			return removed, fmt.Errorf("failed to collect embedded %s paths: %w", dir, err)
+		}
+
+		diskDir := filepath.Join(baseDir, dir)
+		if _, err := os.Stat(diskDir); os.IsNotExist(err) {
+			continue
+		}
+
+		// Remove files not in the embedded set
+		err = filepath.Walk(diskDir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() {
+				return nil
+			}
+			relPath, relErr := filepath.Rel(diskDir, path)
+			if relErr != nil {
+				return relErr
+			}
+			if !embeddedPaths[relPath] {
+				fmt.Printf("  🗑️  Removing stale file: %s/%s\n", dir, relPath)
+				if rmErr := os.Remove(path); rmErr != nil {
+					return rmErr
+				}
+				removed++
+			}
+			return nil
+		})
+		if err != nil {
+			return removed, err
+		}
+
+		// Prune empty directories (walk in reverse depth order)
+		_ = pruneEmptyDirs(diskDir)
+	}
+
+	return removed, nil
+}
+
+// pruneEmptyDirs removes empty directories under root, bottom-up.
+func pruneEmptyDirs(root string) error {
+	// Collect directories bottom-up
+	var dirs []string
+	_ = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if info.IsDir() && path != root {
+			dirs = append(dirs, path)
+		}
+		return nil
+	})
+
+	// Remove in reverse order (deepest first)
+	for i := len(dirs) - 1; i >= 0; i-- {
+		entries, err := os.ReadDir(dirs[i])
+		if err != nil {
+			continue
+		}
+		if len(entries) == 0 {
+			fmt.Printf("  🗑️  Removing empty directory: %s\n", dirs[i])
+			_ = os.Remove(dirs[i])
+		}
+	}
+	return nil
 }
 
 func shouldUpdateFile(srcPath, destPath, relPath string, completedExercises map[string]bool) bool {
