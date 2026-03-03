@@ -1,5 +1,6 @@
 [exercise]
 name = "break_defer_loops"
+order = 3
 category = "49_control_structures"
 difficulty = 3
 estimated_time = "15m"

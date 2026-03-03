@@ -1,5 +1,6 @@
 [exercise]
 name = "string_conversions_leaks"
+order = 3
 category = "50_strings"
 difficulty = 3
 estimated_time = "15m"

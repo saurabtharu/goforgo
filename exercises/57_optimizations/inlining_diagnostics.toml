@@ -1,5 +1,6 @@
 [exercise]
 name = "inlining_diagnostics"
+order = 4
 category = "57_optimizations"
 difficulty = 4
 estimated_time = "20m"

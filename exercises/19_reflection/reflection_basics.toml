@@ -1,5 +1,6 @@
 [exercise]
 name = "reflection_basics"
+order = 1
 category = "19_reflection"
 difficulty = 4
 estimated_time = "25m"

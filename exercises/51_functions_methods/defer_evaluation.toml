@@ -1,5 +1,6 @@
 [exercise]
 name = "defer_evaluation"
+order = 4
 category = "51_functions_methods"
 difficulty = 3
 estimated_time = "15m"

@@ -1,5 +1,6 @@
 [exercise]
 name = "cpu_cache_sharing"
+order = 5
 category = "57_optimizations"
 difficulty = 5
 estimated_time = "25m"

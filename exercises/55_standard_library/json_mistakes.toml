@@ -1,5 +1,6 @@
 [exercise]
 name = "json_mistakes"
+order = 2
 category = "55_standard_library"
 difficulty = 3
 estimated_time = "20m"

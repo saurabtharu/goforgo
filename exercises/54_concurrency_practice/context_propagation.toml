@@ -1,5 +1,6 @@
 [exercise]
 name = "context_propagation"
+order = 1
 category = "54_concurrency_practice"
 difficulty = 3
 estimated_time = "15m"

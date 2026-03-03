@@ -1,5 +1,6 @@
 [exercise]
 name = "range_pointers"
+order = 2
 category = "49_control_structures"
 difficulty = 3
 estimated_time = "15m"

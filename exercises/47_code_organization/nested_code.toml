@@ -1,5 +1,6 @@
 [exercise]
 name = "nested_code"
+order = 2
 category = "47_code_organization"
 difficulty = 2
 estimated_time = "10m"

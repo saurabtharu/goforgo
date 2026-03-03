@@ -1,5 +1,6 @@
 [exercise]
 name = "project_practices"
+order = 4
 category = "47_code_organization"
 difficulty = 2
 estimated_time = "15m"

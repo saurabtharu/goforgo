@@ -1,5 +1,6 @@
 [exercise]
 name = "runes_iteration"
+order = 1
 category = "50_strings"
 difficulty = 3
 estimated_time = "15m"

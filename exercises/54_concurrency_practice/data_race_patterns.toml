@@ -1,5 +1,6 @@
 [exercise]
 name = "data_race_patterns"
+order = 4
 category = "54_concurrency_practice"
 difficulty = 4
 estimated_time = "20m"

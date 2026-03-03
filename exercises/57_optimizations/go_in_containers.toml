@@ -1,5 +1,6 @@
 [exercise]
 name = "go_in_containers"
+order = 1
 category = "57_optimizations"
 difficulty = 3
 estimated_time = "15m"

@@ -1,5 +1,6 @@
 [exercise]
 name = "benchmarking"
+order = 4
 category = "56_testing_mistakes"
 difficulty = 3
 estimated_time = "15m"

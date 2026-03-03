@@ -250,9 +250,6 @@ func (r *Runner) ensureGoMod(exerciseDir string, ex *exercise.Exercise) error {
 	// Create a minimal go.mod file
 	moduleName := fmt.Sprintf("goforgo/%s/%s", ex.Info.Category, ex.Info.Name)
 	goVersion := "1.24"
-	if ex.Info.GoVersion != "" {
-		goVersion = ex.Info.GoVersion
-	}
 
 	goModContent := fmt.Sprintf(`module %s
 

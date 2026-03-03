@@ -1,5 +1,6 @@
 [exercise]
 name = "test_utilities"
+order = 3
 category = "56_testing_mistakes"
 difficulty = 3
 estimated_time = "20m"

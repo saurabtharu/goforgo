@@ -1,5 +1,6 @@
 [exercise]
 name = "receiver_types"
+order = 1
 category = "51_functions_methods"
 difficulty = 3
 estimated_time = "15m"

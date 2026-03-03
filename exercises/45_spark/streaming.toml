@@ -1,5 +1,6 @@
 [exercise]
 name = "streaming"
+order = 3
 category = "45_spark"
 difficulty = 3
 title = "Spark Streaming"

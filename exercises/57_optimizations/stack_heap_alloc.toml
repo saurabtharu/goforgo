@@ -1,5 +1,6 @@
 [exercise]
 name = "stack_heap_alloc"
+order = 2
 category = "57_optimizations"
 difficulty = 4
 estimated_time = "20m"

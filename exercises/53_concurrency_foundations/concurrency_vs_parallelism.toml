@@ -1,5 +1,6 @@
 [exercise]
 name = "concurrency_vs_parallelism"
+order = 1
 category = "53_concurrency_foundations"
 difficulty = 3
 estimated_time = "15m"

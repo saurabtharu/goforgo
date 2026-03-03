@@ -1,5 +1,6 @@
 [exercise]
 name = "time_mistakes"
+order = 1
 category = "55_standard_library"
 difficulty = 3
 estimated_time = "15m"

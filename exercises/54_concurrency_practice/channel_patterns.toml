@@ -1,5 +1,6 @@
 [exercise]
 name = "channel_patterns"
+order = 3
 category = "54_concurrency_practice"
 difficulty = 4
 estimated_time = "25m"

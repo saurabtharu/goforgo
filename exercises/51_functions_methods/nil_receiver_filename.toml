@@ -1,5 +1,6 @@
 [exercise]
 name = "nil_receiver_filename"
+order = 3
 category = "51_functions_methods"
 difficulty = 3
 estimated_time = "20m"

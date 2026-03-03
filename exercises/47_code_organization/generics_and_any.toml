@@ -1,5 +1,6 @@
 [exercise]
 name = "generics_and_any"
+order = 6
 category = "47_code_organization"
 difficulty = 3
 estimated_time = "20m"
