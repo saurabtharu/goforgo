@@ -94,16 +94,32 @@ goforgo list                   # List all exercises with progress
 goforgo list --all             # Show completed exercises too
 ```
 
+### Testing Helpers
+
+```bash
+goforgo solve 5                # Copy solution into exercise 5
+goforgo solve 3-7              # Solve exercises 3 through 7 (inclusive)
+goforgo sync                   # Re-validate all exercises, update progress
+goforgo clean                  # Remove build artifacts from exercise dirs
+```
+
+`solve` copies the reference solution over the exercise file and marks it complete — useful for quickly advancing through exercises you've already understood. `sync` re-runs every exercise and updates progress to match reality (marks passing exercises complete, unmarks failing ones).
+
+In the TUI list view, press `r` to run a sync and refresh the list in-place.
+
 ### Available Commands
 
-| Command                                 | Description                               |
-| --------------------------------------- | ----------------------------------------- |
-| `goforgo`                               | Start interactive watch mode (default)    |
-| `goforgo init`                          | Initialize exercises in current directory |
-| `goforgo run [exercise]`                | Run specific exercise or next incomplete  |
-| `goforgo hint [exercise]`               | Show progressive hints                    |
-| `goforgo list [--all] [--category=...]` | List exercises with filters               |
-| `goforgo watch`                         | Explicit watch mode with file monitoring  |
+| Command                                 | Description                                       |
+| --------------------------------------- | ------------------------------------------------- |
+| `goforgo`                               | Start interactive watch mode (default)             |
+| `goforgo init`                          | Initialize exercises in current directory           |
+| `goforgo run [exercise]`                | Run specific exercise or next incomplete            |
+| `goforgo hint [exercise]`               | Show progressive hints                              |
+| `goforgo list [--all] [--category=...]` | List exercises with filters                         |
+| `goforgo watch`                         | Explicit watch mode with file monitoring            |
+| `goforgo solve <N or X-Y>`             | Copy solutions over exercises for a range           |
+| `goforgo sync`                          | Re-validate all exercises and update progress       |
+| `goforgo clean`                         | Remove build artifacts from exercise directories    |
 
 ## 🏗️ Building from Source
 

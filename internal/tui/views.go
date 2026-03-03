@@ -891,7 +891,7 @@ func (m *Model) renderExerciseList() string {
 	} else if m.filterText != "" {
 		footerText = "Navigation: ↑↓/jk=move  Enter=select  /=filter  Esc=clear filter or back"
 	} else {
-		footerText = "Navigation: {n}j/k=move  gg/G=top/end  H/M/L=screen  Ctrl+u/d=halfpage  /=filter  Esc=back"
+		footerText = "Navigation: {n}j/k=move  gg/G=top/end  H/M/L=screen  Ctrl+u/d=halfpage  /=filter  r=sync  Esc=back"
 	}
 	content.WriteString(statusStyle.Render(footerText))
 

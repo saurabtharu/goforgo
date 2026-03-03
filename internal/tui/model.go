@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -188,6 +189,11 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case syncResultMsg:
+		m.exercises = m.exerciseManager.GetExercises()
+		m.statusMessage = fmt.Sprintf("Synced: %d/%d complete", msg.completed, msg.total)
+		return m, nil
+
 	case statusMsg:
 		m.statusMessage = msg.message
 		return m, nil
@@ -261,6 +267,11 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case "r":
+		if m.viewMode == ViewList {
+			// Sync all exercises in list view
+			m.statusMessage = "Syncing..."
+			return m, m.syncExercises()
+		}
 		// Manually run exercise
 		if !m.isRunning {
 			return m, m.runCurrentExercise()
@@ -582,6 +593,11 @@ type splashTickMsg struct{}
 
 type autoAdvanceMsg struct{}
 
+type syncResultMsg struct {
+	completed int
+	total     int
+}
+
 // Commands
 func (m *Model) runCurrentExercise() tea.Cmd {
 	if m.currentExercise == nil {
@@ -866,6 +882,33 @@ func (m *Model) scrollOutput(delta int) tea.Cmd {
 	}
 	
 	return nil
+}
+
+// syncExercises validates all exercises and updates progress
+func (m *Model) syncExercises() tea.Cmd {
+	return func() tea.Msg {
+		exercises := m.exerciseManager.GetExercises()
+		completed := 0
+
+		for _, ex := range exercises {
+			result, err := m.runner.RunExercise(ex)
+			if err != nil {
+				continue
+			}
+			if result.Success {
+				if !ex.Completed {
+					m.exerciseManager.MarkExerciseCompleted(ex.Info.Name)
+				}
+				completed++
+			} else {
+				if ex.Completed {
+					m.exerciseManager.UnmarkExerciseCompleted(ex.Info.Name)
+				}
+			}
+		}
+
+		return syncResultMsg{completed: completed, total: len(exercises)}
+	}
 }
 
 // scrollToBottom scrolls the output view to the bottom
