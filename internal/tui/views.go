@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -245,7 +246,19 @@ func (m *Model) renderExerciseInfo() string {
 	ex := m.currentExercise
 
 	difficulty := ex.GetDifficultyString()
-	filePath := codeStyle.Render(ex.FilePath)
+	base := filepath.Base(ex.FilePath)
+	category := filepath.Base(filepath.Dir(ex.FilePath))
+	categoryStyle := lipgloss.NewStyle().
+		Background(lipgloss.Color("#161b22")).
+		Foreground(lipgloss.Color("#58a6ff")).
+		Bold(true).
+		Padding(0, 0, 0, 1)
+	baseStyle := lipgloss.NewStyle().
+		Background(lipgloss.Color("#161b22")).
+		Foreground(lipgloss.Color("#f0883e")).
+		Bold(true).
+		Padding(0, 1, 0, 0)
+	filePath := categoryStyle.Render(category+"/") + baseStyle.Render(base)
 
 	info := fmt.Sprintf(`📝 Current Exercise: %s
 📁 File: %s
