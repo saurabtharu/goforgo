@@ -67,11 +67,11 @@ install-deps:
     go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
     go install golang.org/x/tools/cmd/goimports@latest
 
-# Development build (fast, no optimizations)
+# Development build (fast, includes dev-only commands like solve)
 dev-build:
     @echo "🚀 Building for development..."
     mkdir -p bin
-    go build -o bin/goforgo-dev ./cmd/goforgo
+    go build -tags dev -o bin/goforgo-dev ./cmd/goforgo
     @echo "✅ Development binary built: bin/goforgo-dev"
 
 # Test the CLI in a temporary directory
