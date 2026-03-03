@@ -20,6 +20,6 @@ expected_output = "Learning about imports!"
 timeout = "10s"
 
 [hints]
-level_1 = "You need to import a package to use its functions"
-level_2 = "Use 'import \"fmt\"' to import the fmt package"
-level_3 = "Add the import statement after package main and before func main()"
+level_1 = "Open exercises/imports.go — the code uses fmt.Println but never imports the fmt package."
+level_2 = "Add 'import \"fmt\"' between the package declaration and func main()."
+level_3 = "The file should read: package main, then import \"fmt\", then func main() with the Println call inside."

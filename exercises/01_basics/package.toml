@@ -7,7 +7,7 @@ estimated_time = "3m"
 
 [description]
 title = "Package Declaration"
-summary = "Learn about Go's package system"
+summary = "Learn about Go's package system. Remember: edit files in exercises/, not solutions/. Look for TODO comments that tell you what to fix."
 learning_objectives = [
   "Understand the package declaration",
   "Learn about the main package",
@@ -20,6 +20,6 @@ expected_output = "Package declaration is working!"
 timeout = "10s"
 
 [hints]
-level_1 = "Every Go file must start with a package declaration"
-level_2 = "Executable programs use the 'main' package"
-level_3 = "Add 'package main' at the very top of the file"
+level_1 = "Open package.go — notice the very first line is missing something every Go file needs."
+level_2 = "Every Go file must begin with a package declaration. Executable programs use 'package main'."
+level_3 = "Add 'package main' as the very first line of package.go, before the import statement."

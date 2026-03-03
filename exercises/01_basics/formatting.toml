@@ -19,6 +19,6 @@ mode = "run"
 timeout = "10s"
 
 [hints]
-level_1 = "Go has strict formatting conventions - use proper spacing"
-level_2 = "Add spaces around operators and after commas"
-level_3 = "Run 'gofmt' on your code or add proper spacing manually"
+level_1 = "Open formatting.go — the code runs but has bad formatting. Look at the import block and function signature for missing spaces."
+level_2 = "Fix these: 'import(' needs a space before '(', 'func main(){' needs a space before '{', and 'message:=' needs spaces around ':='."
+level_3 = "Also fix the extra spaces inside parentheses on the time.Now line: 'time.Now( )' should be 'time.Now()' and remove spaces around the comma arguments."

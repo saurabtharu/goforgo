@@ -19,17 +19,24 @@ mode = "test"
 timeout = "30s"
 
 [hints]
-level_1 = """To prevent the compiler from optimizing away function calls,
-store the result in a package-level variable:
-var benchResult []int  // package-level
-In the benchmark: var r []int; ... r = SortSlice(input); benchResult = r"""
-level_2 = """Call b.ResetTimer() after any expensive setup that shouldn't
-be measured. For BenchmarkSumSlice, add b.ResetTimer() after GenerateSlice."""
-level_3 = """For the observer effect, move input creation BEFORE the b.N loop:
+level_1 = """The compiler can see that a benchmark result is never used and
+optimize the function call away entirely, making it appear instant.
+Fix: store the result in a package-level variable so the compiler can't prove
+it's unused. Declare 'var benchResult []int' at package level, then inside
+the loop: r = SortSlice(input), and after the loop: benchResult = r."""
+level_2 = """b.ResetTimer() tells the benchmark timer to start fresh.
+Without it, expensive setup (like GenerateSlice creating 10,000 elements)
+is counted in the measurement, inflating your ns/op numbers.
+Add b.ResetTimer() right after setup, before the b.N loop."""
+level_3 = """The observer effect: if you create input INSIDE the b.N loop,
+you're benchmarking input creation + the function together. Each iteration
+measures both, so you can't tell how fast the function alone is.
+Fix: create input once BEFORE b.ResetTimer() and the loop:
 parts := make([]string, size)
 for j := range parts { parts[j] = "x" }
 b.ResetTimer()
-for i := 0; i < b.N; i++ { BuildString(parts) }"""
+for i := 0; i < b.N; i++ { BuildString(parts) }
+Now each iteration only measures BuildString."""
 
 [metadata]
 tags = ["testing", "benchmarks", "performance", "compiler-optimization", "100-go-mistakes"]

@@ -655,41 +655,41 @@ func (m *Model) consumeCount(defaultVal int) int {
 	return defaultVal
 }
 
-// Styles
+// Styles — GitHub Dark theme palette for readability on dark terminals.
 var (
 	headerStyle = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("#7C3AED")).
+		Foreground(lipgloss.Color("#bc8cff")).
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderBottom(true).
-		BorderForeground(lipgloss.Color("#7C3AED"))
+		BorderForeground(lipgloss.Color("#bc8cff"))
 
 	titleStyle = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("#1F2937"))
+		Foreground(lipgloss.Color("#e6edf3"))
 
 	successStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#10B981")).
+		Foreground(lipgloss.Color("#3fb950")).
 		Bold(true)
 
 	errorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#EF4444")).
+		Foreground(lipgloss.Color("#f85149")).
 		Bold(true)
 
 	hintStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#F59E0B")).
+		Foreground(lipgloss.Color("#d29922")).
 		Italic(true)
 
 	codeStyle = lipgloss.NewStyle().
-		Background(lipgloss.Color("#F3F4F6")).
-		Foreground(lipgloss.Color("#1F2937")).
+		Background(lipgloss.Color("#161b22")).
+		Foreground(lipgloss.Color("#e6edf3")).
 		Padding(0, 1)
 
 	progressBarStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED"))
+		Foreground(lipgloss.Color("#bc8cff"))
 
 	statusStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
+		Foreground(lipgloss.Color("#8b949e")).
 		Italic(true)
 )
 
