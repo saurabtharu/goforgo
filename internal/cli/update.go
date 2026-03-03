@@ -2,11 +2,13 @@ package cli
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
+	goforgo "github.com/stonecharioteer/goforgo"
 	"github.com/stonecharioteer/goforgo/internal/exercise"
 )
 
@@ -57,36 +59,34 @@ This command will:
 }
 
 func updateExerciseFiles(baseDir string, completedExercises map[string]bool) error {
-	sourceExercises, sourceSolutions, err := findExerciseSourceDirs()
-	if err != nil {
-		return err
-	}
+	fmt.Println("📂 Updating from embedded exercises...")
 
-	fmt.Printf("📂 Updating from source: %s\n", sourceExercises)
-
-	// Walk through source exercises and update selectively
-	err = filepath.Walk(sourceExercises, func(srcPath string, info os.FileInfo, err error) error {
+	// Walk through embedded exercises and update selectively
+	err := fs.WalkDir(goforgo.Content, "exercises", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		relPath, err := filepath.Rel(sourceExercises, srcPath)
+		relPath, err := filepath.Rel("exercises", path)
 		if err != nil {
 			return err
 		}
 		destPath := filepath.Join(baseDir, "exercises", relPath)
 
-		if info.IsDir() {
-			// Ensure directory exists
+		if d.IsDir() {
 			return os.MkdirAll(destPath, 0755)
 		}
 
 		// Determine if we should update this file
-		shouldUpdate := shouldUpdateFile(srcPath, destPath, relPath, completedExercises)
-		
+		shouldUpdate := shouldUpdateFile("", destPath, relPath, completedExercises)
+
 		if shouldUpdate {
 			fmt.Printf("  📝 Updating: %s\n", relPath)
-			return copyFile(srcPath, destPath)
+			content, readErr := goforgo.Content.ReadFile(path)
+			if readErr != nil {
+				return readErr
+			}
+			return os.WriteFile(destPath, content, 0644)
 		} else {
 			fmt.Printf("  ⏭️  Preserving: %s (exercise completed)\n", relPath)
 		}
@@ -99,29 +99,29 @@ func updateExerciseFiles(baseDir string, completedExercises map[string]bool) err
 	}
 
 	// Update solutions directory too (these are reference solutions)
-	if _, err := os.Stat(sourceSolutions); err == nil {
-		fmt.Printf("📂 Updating solutions from: %s\n", sourceSolutions)
-		return filepath.Walk(sourceSolutions, func(srcPath string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
+	fmt.Println("📂 Updating solutions...")
+	return fs.WalkDir(goforgo.Content, "solutions", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
 
-			relPath, err := filepath.Rel(sourceSolutions, srcPath)
-			if err != nil {
-				return err
-			}
-			destPath := filepath.Join(baseDir, "solutions", relPath)
+		relPath, err := filepath.Rel("solutions", path)
+		if err != nil {
+			return err
+		}
+		destPath := filepath.Join(baseDir, "solutions", relPath)
 
-			if info.IsDir() {
-				return os.MkdirAll(destPath, 0755)
-			}
+		if d.IsDir() {
+			return os.MkdirAll(destPath, 0755)
+		}
 
-			fmt.Printf("  📝 Updating solution: %s\n", relPath)
-			return copyFile(srcPath, destPath)
-		})
-	}
-
-	return nil
+		fmt.Printf("  📝 Updating solution: %s\n", relPath)
+		content, readErr := goforgo.Content.ReadFile(path)
+		if readErr != nil {
+			return readErr
+		}
+		return os.WriteFile(destPath, content, 0644)
+	})
 }
 
 func shouldUpdateFile(srcPath, destPath, relPath string, completedExercises map[string]bool) bool {
