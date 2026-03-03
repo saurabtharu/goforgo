@@ -63,6 +63,10 @@ type Model struct {
 	// Progress and statistics
 	// Counts are now calculated dynamically via exerciseManager methods
 	
+	// Vim-style key sequence state
+	pendingKey   string // Buffered key for multi-key sequences (e.g., "g", "z")
+	pendingCount int    // Numeric prefix for {count}j/{count}k motions
+
 	// Messages and status
 	statusMessage string
 	splashFrame   int
@@ -245,7 +249,8 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "up", "k":
 		if m.viewMode == ViewList && !m.filterMode {
-			return m, m.moveListSelection(-1)
+			count := m.consumeCount(1)
+			return m, m.moveListSelection(-count)
 		}
 		if m.viewMode == ViewOutput {
 			return m, m.scrollOutput(-1)
@@ -254,10 +259,31 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "down", "j":
 		if m.viewMode == ViewList && !m.filterMode {
-			return m, m.moveListSelection(1)
+			count := m.consumeCount(1)
+			return m, m.moveListSelection(count)
 		}
 		if m.viewMode == ViewOutput {
 			return m, m.scrollOutput(1)
+		}
+		return m, nil
+
+	case "ctrl+u":
+		// Half-page up (vim style)
+		if m.viewMode == ViewList && !m.filterMode {
+			return m, m.moveListSelection(-m.listViewHeight / 2)
+		}
+		if m.viewMode == ViewOutput {
+			return m, m.scrollOutput(-m.outputViewHeight / 2)
+		}
+		return m, nil
+
+	case "ctrl+d":
+		// Half-page down (vim style)
+		if m.viewMode == ViewList && !m.filterMode {
+			return m, m.moveListSelection(m.listViewHeight / 2)
+		}
+		if m.viewMode == ViewOutput {
+			return m, m.scrollOutput(m.outputViewHeight / 2)
 		}
 		return m, nil
 
@@ -303,24 +329,79 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case "G":
+		// Go to bottom (vim style), or {count}G to go to line
+		if m.viewMode == ViewList && !m.filterMode {
+			filteredExercises := m.getFilteredExercises()
+			if m.pendingCount > 0 {
+				target := m.pendingCount - 1 // 1-indexed to 0-indexed
+				m.pendingCount = 0
+				if target >= len(filteredExercises) {
+					target = len(filteredExercises) - 1
+				}
+				m.listSelectedIndex = target
+			} else {
+				m.listSelectedIndex = len(filteredExercises) - 1
+			}
+			m.ensureSelectedVisible()
+			return m, nil
+		}
+		return m, nil
+
+	case "g":
+		// First 'g' in 'gg' sequence - go to top
+		if m.viewMode == ViewList && !m.filterMode {
+			if m.pendingKey == "g" {
+				m.pendingKey = ""
+				m.pendingCount = 0
+				m.listSelectedIndex = 0
+				m.ensureSelectedVisible()
+				return m, nil
+			}
+			m.pendingKey = "g"
+			return m, nil
+		}
+		return m, nil
+
+	case "H":
+		// Move to top of visible screen
+		if m.viewMode == ViewList && !m.filterMode {
+			m.listSelectedIndex = m.listScrollOffset
+			return m, nil
+		}
+		return m, nil
+
+	case "M":
+		// Move to middle of visible screen
+		if m.viewMode == ViewList && !m.filterMode {
+			filteredExercises := m.getFilteredExercises()
+			mid := m.listScrollOffset + m.listViewHeight/2
+			if mid >= len(filteredExercises) {
+				mid = len(filteredExercises) - 1
+			}
+			m.listSelectedIndex = mid
+			return m, nil
+		}
+		return m, nil
+
+	case "L":
+		// Move to bottom of visible screen
+		if m.viewMode == ViewList && !m.filterMode {
+			filteredExercises := m.getFilteredExercises()
+			bottom := m.listScrollOffset + m.listViewHeight - 1
+			if bottom >= len(filteredExercises) {
+				bottom = len(filteredExercises) - 1
+			}
+			m.listSelectedIndex = bottom
+			return m, nil
+		}
+		return m, nil
+
 	case "backspace":
 		// Handle backspace in filter mode
 		if m.filterMode && len(m.filterText) > 0 {
 			m.filterText = m.filterText[:len(m.filterText)-1]
 			return m, nil
-		}
-		return m, nil
-
-	default:
-		// Handle text input in filter mode
-		if m.filterMode && len(msg.String()) == 1 {
-			char := msg.String()
-			// Only allow alphanumeric characters, underscore, and space
-			if (char >= "a" && char <= "z") || (char >= "A" && char <= "Z") || 
-			   (char >= "0" && char <= "9") || char == "_" || char == " " {
-				m.filterText += char
-				return m, nil
-			}
 		}
 		return m, nil
 
@@ -331,6 +412,36 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.filterText = ""
 			return m, nil
 		}
+		return m, nil
+
+	default:
+		key := msg.String()
+
+		// Handle text input in filter mode
+		if m.filterMode && len(key) == 1 {
+			// Only allow alphanumeric characters, underscore, and space
+			if (key >= "a" && key <= "z") || (key >= "A" && key <= "Z") ||
+				(key >= "0" && key <= "9") || key == "_" || key == " " {
+				m.filterText += key
+				return m, nil
+			}
+		}
+
+		// Handle numeric prefix for vim-style {count} motions in list/output views
+		if !m.filterMode && (m.viewMode == ViewList || m.viewMode == ViewOutput) {
+			if key >= "0" && key <= "9" && (m.pendingCount > 0 || key != "0") {
+				digit := int(key[0] - '0')
+				m.pendingCount = m.pendingCount*10 + digit
+				return m, nil
+			}
+		}
+
+		// Clear pending key if unrecognized sequence
+		if m.pendingKey != "" {
+			m.pendingKey = ""
+			m.pendingCount = 0
+		}
+
 		return m, nil
 
 	case "enter", "esc":
@@ -532,6 +643,16 @@ func (m *Model) shouldProcessFileEvent(event watcher.Event) bool {
 
 	// Check if it's the current exercise file
 	return strings.Contains(event.Name, m.currentExercise.Info.Name)
+}
+
+// consumeCount returns the pending count (or the default if no count was entered) and resets it.
+func (m *Model) consumeCount(defaultVal int) int {
+	if m.pendingCount > 0 {
+		count := m.pendingCount
+		m.pendingCount = 0
+		return count
+	}
+	return defaultVal
 }
 
 // Styles

@@ -100,7 +100,7 @@ func listExercises(cmd *cobra.Command, args []string) error {
 			categoryNumber := ""
 			categoryName := ex.Info.Category
 			if strings.Contains(ex.Info.Category, "_") {
-				parts := strings.Split(ex.Info.Category, "_")
+				parts := strings.SplitN(ex.Info.Category, "_", 2)
 				if len(parts) > 1 {
 					categoryNumber = parts[0]
 					categoryName = parts[1]
@@ -152,8 +152,16 @@ func listExercises(cmd *cobra.Command, args []string) error {
 		categories[ex.Info.Category] = append(categories[ex.Info.Category], ex)
 	}
 
+	// Sort categories for consistent display order
+	sortedCategories := make([]string, 0, len(categories))
+	for category := range categories {
+		sortedCategories = append(sortedCategories, category)
+	}
+	sort.Strings(sortedCategories)
+
 	// Display exercises grouped by category
-	for category, categoryExercises := range categories {
+	for _, category := range sortedCategories {
+		categoryExercises := categories[category]
 		fmt.Printf("\n📁 %s\n", strings.ToTitle(strings.ReplaceAll(category, "_", " ")))
 		fmt.Println(strings.Repeat("─", 40))
 

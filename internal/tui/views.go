@@ -698,11 +698,52 @@ func (m *Model) renderExerciseList() string {
 		}
 	}
 
+	// Cap total table width to terminal width.
+	// NormalBorder adds: 1 left + 5 between columns + 1 right = 7 chars for borders.
+	// Each column gets 1 char padding on each side = 6 * 2 = 12 chars.
+	// Total overhead = 19 chars.
+	borderOverhead := len(maxWidths) + 1 + len(maxWidths)*2 // borders between + edges + padding
+	availableForCols := m.width - borderOverhead
+	if availableForCols < 40 {
+		availableForCols = 40
+	}
+
+	totalColWidth := 0
+	for _, w := range maxWidths {
+		totalColWidth += w
+	}
+
+	// Shrink the two widest flexible columns (name and category) if we exceed available space.
+	if totalColWidth > availableForCols {
+		excess := totalColWidth - availableForCols
+		// Shrink name (col 2) first, then category (col 3)
+		nameMax := maxWidths[2] - excess
+		if nameMax < 15 {
+			nameMax = 15
+		}
+		shrunk := maxWidths[2] - nameMax
+		maxWidths[2] = nameMax
+		excess -= shrunk
+		if excess > 0 {
+			catMax := maxWidths[3] - excess
+			if catMax < 10 {
+				catMax = 10
+			}
+			maxWidths[3] = catMax
+		}
+	}
+
+	tableWidth := 0
+	for _, w := range maxWidths {
+		tableWidth += w
+	}
+	tableWidth += borderOverhead
+
 	// Create table with dynamic column widths
 	t := table.New().
 		Border(lipgloss.NormalBorder()).
 		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6B7280"))).
-		Width(maxWidths[0] + maxWidths[1] + maxWidths[2] + maxWidths[3] + maxWidths[4] + maxWidths[5] + 12). // Account for borders and padding
+		Width(tableWidth).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			// Header row styling
 			if row == 0 {
@@ -817,25 +858,31 @@ func (m *Model) renderExerciseList() string {
 	} else if m.filterText != "" {
 		footerText = "Navigation: ↑↓/jk=move  Enter=select  /=filter  Esc=clear filter or back"
 	} else {
-		footerText = "Navigation: ↑↓/jk=move  PgUp/PgDn=page  Home/End=jump  Enter=select  /=filter  Esc=back"
+		footerText = "Navigation: {n}j/k=move  gg/G=top/end  H/M/L=screen  Ctrl+u/d=halfpage  /=filter  Esc=back"
 	}
 	content.WriteString(statusStyle.Render(footerText))
 
-	// Apply consistent border styling
+	// Apply consistent border styling using table width for alignment
 	listContent := content.String()
-	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED"))
-	borderLine := borderStyle.Render(strings.Repeat("═", borderCharWidth))
+	borderWidth := tableWidth
+	if borderWidth < borderCharWidth {
+		borderWidth = borderCharWidth
+	}
+	listBorderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED"))
+	borderLine := listBorderStyle.Render(strings.Repeat("═", borderWidth))
 
 	borderedContent := fmt.Sprintf(`%s
 %s
 %s`, borderLine, listContent, borderLine)
 
-	// Center and style consistently
-	contentWidth := m.getContentWidth()
+	// Use the full terminal width for the list view so the table isn't constrained
+	listWidth := m.width
+	if listWidth < minContentWidth {
+		listWidth = minContentWidth
+	}
 
 	style := lipgloss.NewStyle().
-		Width(contentWidth).
-		Align(lipgloss.Center).
+		Width(listWidth).
 		Padding(1, 0)
 
 	return style.Render(borderedContent)
