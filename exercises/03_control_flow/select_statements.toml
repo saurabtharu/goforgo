@@ -1,7 +1,7 @@
 [exercise]
 name = "select_statements"
 order = 10
-category = "04_control_flow"
+category = "03_control_flow"
 difficulty = 4
 estimated_time = "12m"
 go_version = "1.16+"

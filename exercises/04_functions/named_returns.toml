@@ -1,7 +1,7 @@
 [exercise]
 name = "named_returns"
 order = 4
-category = "03_functions"
+category = "04_functions"
 difficulty = 2
 estimated_time = "5m"
 go_version = "1.16+"
@@ -27,4 +27,4 @@ level_3 = "Example: func calc() (area, perimeter float64) { area = 5.0; perimete
 
 [metadata]
 tags = ["functions", "named-returns", "naked-return"]
-related_exercises = ["03_functions/return_values.go"]
+related_exercises = ["04_functions/return_values.go"]

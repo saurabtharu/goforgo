@@ -28,4 +28,4 @@ level_3 = "Anonymous goroutine: go func() { ... }()"
 
 [metadata]
 tags = ["concurrency", "goroutines", "waitgroup", "channels"]
-related_exercises = ["04_control_flow/select_statements.go"]
+related_exercises = ["03_control_flow/select_statements.go"]

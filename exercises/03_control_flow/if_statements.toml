@@ -1,7 +1,7 @@
 [exercise]
 name = "if_statements"
 order = 1
-category = "04_control_flow"
+category = "03_control_flow"
 difficulty = 1
 estimated_time = "5m"
 go_version = "1.16+"

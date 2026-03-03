@@ -43,14 +43,14 @@ func main() {
 	// Create a multiplier that multiplies by 3 using makeMultiplier
 	multiply3 := makeMultiplier(3)
 	
-	// Use the multiplier to multiply 5 and 10, print the results
+	// Use the multiplier on 5 and on 10, print the results
 	fmt.Println("3 * 5 =", multiply3(5))
 	fmt.Println("3 * 10 =", multiply3(10))
 	
 	// Create a multiplier that multiplies by 7 using makeMultiplier
 	multiply7 := makeMultiplier(7)
 	
-	// Use the second multiplier to multiply 4 and 6, print the results
+	// Use the second multiplier on 4 and on 6, print the results
 	fmt.Println("7 * 4 =", multiply7(4))
 	fmt.Println("7 * 6 =", multiply7(6))
 }

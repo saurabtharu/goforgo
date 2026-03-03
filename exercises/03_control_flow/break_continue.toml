@@ -1,7 +1,7 @@
 [exercise]
 name = "break_continue"
 order = 5
-category = "04_control_flow"
+category = "03_control_flow"
 difficulty = 3
 estimated_time = "12m"
 go_version = "1.16+"
@@ -27,4 +27,4 @@ level_3 = "Use break for early termination, continue for filtering iterations"
 
 [metadata]
 tags = ["control-flow", "break", "continue", "labels", "nested-loops"]
-related_exercises = ["04_control_flow/for_loops.go", "04_control_flow/range_loops.go"]
+related_exercises = ["03_control_flow/for_loops.go", "03_control_flow/range_loops.go"]

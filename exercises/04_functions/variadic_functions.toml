@@ -1,7 +1,7 @@
 [exercise]
 name = "variadic_functions"
 order = 5
-category = "03_functions"
+category = "04_functions"
 difficulty = 3
 estimated_time = "8m"
 go_version = "1.16+"
@@ -27,4 +27,4 @@ level_3 = "Example: func sum(nums ...int) int { total := 0; for _, n := range nu
 
 [metadata]
 tags = ["functions", "variadic", "slices", "range"]
-related_exercises = ["03_functions/parameters.go", "05_slices/slice_basics.go"]
+related_exercises = ["04_functions/parameters.go", "05_slices/slice_basics.go"]

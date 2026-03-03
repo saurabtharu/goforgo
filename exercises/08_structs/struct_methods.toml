@@ -28,4 +28,4 @@ level_3 = "String method: func (receiver Type) String() string"
 
 [metadata]
 tags = ["structs", "methods", "receivers", "interfaces"]
-related_exercises = ["08_structs/struct_basics.go", "03_functions/methods_basics.go"]
+related_exercises = ["08_structs/struct_basics.go"]

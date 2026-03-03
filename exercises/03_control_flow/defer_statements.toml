@@ -1,7 +1,7 @@
 [exercise]
 name = "defer_statements"
 order = 7
-category = "04_control_flow"
+category = "03_control_flow"
 difficulty = 3
 estimated_time = "10m"
 go_version = "1.16+"

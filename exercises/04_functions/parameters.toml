@@ -1,7 +1,7 @@
 [exercise]
 name = "parameters"
 order = 2
-category = "03_functions"
+category = "04_functions"
 difficulty = 1
 estimated_time = "5m"
 go_version = "1.16+"
@@ -27,4 +27,4 @@ level_3 = "Example: func greetPerson(name string) { fmt.Println(\"Hello,\", name
 
 [metadata]
 tags = ["functions", "parameters", "arguments"]
-related_exercises = ["03_functions/function_definition.go"]
+related_exercises = ["04_functions/function_definition.go"]

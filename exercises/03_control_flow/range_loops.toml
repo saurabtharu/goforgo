@@ -1,7 +1,7 @@
 [exercise]
 name = "range_loops"
 order = 4
-category = "04_control_flow"
+category = "03_control_flow"
 difficulty = 2
 estimated_time = "10m"
 go_version = "1.16+"
@@ -27,4 +27,4 @@ level_3 = "Range works on slices, arrays, maps, strings, and channels"
 
 [metadata]
 tags = ["control-flow", "range", "iteration", "slices", "maps", "strings", "channels"]
-related_exercises = ["04_control_flow/for_loops.go", "05_data_structures/slice_basics.go"]
+related_exercises = ["03_control_flow/for_loops.go", "05_data_structures/slice_basics.go"]

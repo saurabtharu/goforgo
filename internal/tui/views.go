@@ -283,6 +283,16 @@ func (m *Model) renderExerciseInfo() string {
 
 // renderResults shows compilation/execution results
 func (m *Model) renderResults() string {
+	// Auto-advance crossfade success screen
+	if m.showingSuccess {
+		crossfadeStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#3fb950")).
+			Bold(true).
+			Align(lipgloss.Center)
+
+		return crossfadeStyle.Render("✅ Exercise completed! Moving on...")
+	}
+
 	if m.isRunning {
 		return statusStyle.Render("🔄 Running exercise...")
 	}
@@ -300,7 +310,11 @@ func (m *Model) renderResults() string {
 
 		if m.currentIndex < len(m.exercises)-1 {
 			result.WriteString("\n")
-			result.WriteString(statusStyle.Render("Press 'n' for the next exercise."))
+			if m.autoAdvance {
+				result.WriteString(statusStyle.Render("Auto-advancing to the next exercise..."))
+			} else {
+				result.WriteString(statusStyle.Render("Press 'n' for the next exercise."))
+			}
 		} else {
 			result.WriteString("\n")
 			result.WriteString(successStyle.Render("🏆 All exercises completed! You're a Go expert!"))
@@ -337,6 +351,11 @@ func (m *Model) renderResults() string {
 
 // renderFooter shows keyboard shortcuts
 func (m *Model) renderFooter() string {
+	autoAdvanceLabel := "[a] auto-adv"
+	if m.autoAdvance {
+		autoAdvanceLabel = "[a] auto-adv:ON"
+	}
+
 	shortcuts := []string{
 		"[n] next",
 		"[p] prev",
@@ -344,6 +363,7 @@ func (m *Model) renderFooter() string {
 		"[l] list",
 		"[r] run",
 		"[s] output",
+		autoAdvanceLabel,
 		"[q] quit",
 	}
 

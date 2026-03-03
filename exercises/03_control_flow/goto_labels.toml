@@ -1,7 +1,7 @@
 [exercise]
 name = "goto_labels"
 order = 6
-category = "04_control_flow"
+category = "03_control_flow"
 difficulty = 2
 estimated_time = "6m"
 go_version = "1.16+"
@@ -27,4 +27,4 @@ level_3 = "Common uses: error handling cleanup, breaking out of deeply nested lo
 
 [metadata]
 tags = ["control-flow", "goto", "labels", "cleanup", "error-handling"]
-related_exercises = ["04_control_flow/break_continue.go"]
+related_exercises = ["03_control_flow/break_continue.go"]

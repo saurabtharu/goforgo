@@ -28,4 +28,4 @@ level_3 = "Sort keys: extract to slice, use sort.Strings()"
 
 [metadata]
 tags = ["maps", "iteration", "range", "sorting"]
-related_exercises = ["04_control_flow/range_loops.go", "07_maps/map_basics.go"]
+related_exercises = ["03_control_flow/range_loops.go", "07_maps/map_basics.go"]

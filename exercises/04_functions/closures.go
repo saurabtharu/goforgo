@@ -23,9 +23,9 @@ func main() {
 	
 	// TODO: Create a multiplier that multiplies by 3 using makeMultiplier
 	
-	// TODO: Use the multiplier to multiply 5 and 10, print the results
+	// TODO: Use the multiplier on 5 and on 10, print the results
 	
 	// TODO: Create a multiplier that multiplies by 7 using makeMultiplier
 	
-	// TODO: Use the second multiplier to multiply 4 and 6, print the results
+	// TODO: Use the second multiplier on 4 and on 6, print the results
 }

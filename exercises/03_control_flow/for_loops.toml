@@ -1,7 +1,7 @@
 [exercise]
 name = "for_loops"
 order = 2
-category = "04_control_flow"
+category = "03_control_flow"
 difficulty = 2
 estimated_time = "8m"
 go_version = "1.16+"
@@ -27,4 +27,4 @@ level_3 = "Use break to exit a loop early, continue to skip to the next iteratio
 
 [metadata]
 tags = ["control-flow", "for", "loops", "iteration", "break", "continue"]
-related_exercises = ["04_control_flow/if_statements.go"]
+related_exercises = ["03_control_flow/if_statements.go"]

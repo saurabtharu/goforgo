@@ -1,7 +1,7 @@
 [exercise]
 name = "panic_recover"
 order = 9
-category = "04_control_flow"
+category = "03_control_flow"
 difficulty = 4
 estimated_time = "15m"
 go_version = "1.16+"
@@ -27,4 +27,4 @@ level_3 = "Use defer + anonymous function: defer func() { if r := recover(); r !
 
 [metadata]
 tags = ["control-flow", "panic", "recover", "defer", "error-handling"]
-related_exercises = ["04_control_flow/defer_statements.go", "09_error_handling/error_basics.go"]
+related_exercises = ["03_control_flow/defer_statements.go", "09_error_handling/error_basics.go"]

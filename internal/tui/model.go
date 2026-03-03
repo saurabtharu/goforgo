@@ -67,6 +67,10 @@ type Model struct {
 	pendingKey   string // Buffered key for multi-key sequences (e.g., "g", "z")
 	pendingCount int    // Numeric prefix for {count}j/{count}k motions
 
+	// Auto-advance mode
+	autoAdvance    bool // When true, auto-advance to next exercise on success
+	showingSuccess bool // True during the success crossfade screen
+
 	// Messages and status
 	statusMessage string
 	splashFrame   int
@@ -124,18 +128,24 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.lastResult = msg.result
 		m.isRunning = false
 		m.statusMessage = ""
-		
+
 		// Mark exercise as completed if successful and not already completed
 		if msg.result.Success && m.currentExercise != nil && !m.currentExercise.Completed {
 			if err := m.exerciseManager.MarkExerciseCompleted(m.currentExercise.Info.Name); err == nil {
 				// Update local completion tracking
 				m.currentExercise.Completed = true
-				
+
 				// Update exercises list with fresh completion status
 				m.exercises = m.exerciseManager.GetExercises()
 			}
 		}
-		
+
+		// Auto-advance: show success screen then move to next exercise
+		if msg.result.Success && m.autoAdvance && m.currentIndex < len(m.exercises)-1 {
+			m.showingSuccess = true
+			return m, tea.Batch(m.waitForFileChange(m.watcher), m.autoAdvanceTick())
+		}
+
 		return m, m.waitForFileChange(m.watcher)
 
 	case exerciseRunningMsg:
@@ -157,6 +167,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Continue listening for file changes
 		if m.watcher != nil {
 			return m, m.waitForFileChange(m.watcher)
+		}
+		return m, nil
+
+	case autoAdvanceMsg:
+		if m.showingSuccess {
+			m.showingSuccess = false
+			return m, m.nextExercise()
 		}
 		return m, nil
 
@@ -227,6 +244,19 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.ensureSelectedVisible()
 		} else {
 			m.viewMode = ViewMain
+		}
+		return m, nil
+
+	case "a":
+		// Toggle auto-advance mode
+		if m.viewMode == ViewMain {
+			m.autoAdvance = !m.autoAdvance
+			if m.autoAdvance {
+				m.statusMessage = "Auto-advance: ON"
+			} else {
+				m.statusMessage = "Auto-advance: OFF"
+			}
+			return m, nil
 		}
 		return m, nil
 
@@ -550,6 +580,8 @@ type statusMsg struct {
 
 type splashTickMsg struct{}
 
+type autoAdvanceMsg struct{}
+
 // Commands
 func (m *Model) runCurrentExercise() tea.Cmd {
 	if m.currentExercise == nil {
@@ -721,6 +753,13 @@ func (m *Model) getMaxHintLevel() int {
 	}
 	
 	return maxLevel
+}
+
+// autoAdvanceTick creates a command to auto-advance after a delay
+func (m *Model) autoAdvanceTick() tea.Cmd {
+	return tea.Tick(time.Second*1, func(time.Time) tea.Msg {
+		return autoAdvanceMsg{}
+	})
 }
 
 // splashTick creates a command for splash screen animation

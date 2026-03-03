@@ -1,7 +1,7 @@
 [exercise]
 name = "type_switches"
 order = 8
-category = "04_control_flow"
+category = "03_control_flow"
 difficulty = 3
 estimated_time = "10m"
 go_version = "1.16+"
@@ -27,4 +27,4 @@ level_3 = "Multiple types in one case: case int, int32, int64: // handle all int
 
 [metadata]
 tags = ["control-flow", "type-switch", "interfaces", "type-assertion", "reflection"]
-related_exercises = ["07_interfaces/interface_basics.go", "04_control_flow/switch_statements.go"]
+related_exercises = ["07_interfaces/interface_basics.go", "03_control_flow/switch_statements.go"]

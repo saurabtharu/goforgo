@@ -1,7 +1,7 @@
 [exercise]
 name = "switch_statements"
 order = 3
-category = "04_control_flow"
+category = "03_control_flow"
 difficulty = 2
 estimated_time = "8m"
 go_version = "1.16+"
@@ -27,4 +27,4 @@ level_3 = "Use fallthrough to continue to next case, initialize: switch x := exp
 
 [metadata]
 tags = ["control-flow", "switch", "case", "fallthrough", "pattern-matching"]
-related_exercises = ["04_control_flow/if_statements.go"]
+related_exercises = ["03_control_flow/if_statements.go"]
