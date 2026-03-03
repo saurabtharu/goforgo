@@ -38,18 +38,16 @@ This command will:
 		fmt.Println("🔄 Updating GoForGo exercise files...")
 
 		// Load exercise manager to get completion status.
-		// If loading fails (e.g. directory structure changed), proceed with
-		// an empty completion map so all files get updated.
-		var completedExercises map[string]bool
+		// Progress is loaded from .goforgo-progress.toml independently of
+		// exercise scanning, so completed exercises are available even when
+		// the directory structure has changed between versions.
 		em := exercise.NewExerciseManager(cwd)
 		if err := em.LoadExercises(); err != nil {
 			fmt.Println("⚠️  Could not load current exercises (structure may have changed)")
-			fmt.Println("   All exercise files will be updated.")
-			completedExercises = make(map[string]bool)
-		} else {
-			completedExercises = em.GetCompletedExercises()
-			fmt.Printf("📊 Found %d completed exercises to preserve\n", len(completedExercises))
+			fmt.Println("   Completed exercises will still be preserved from progress file.")
 		}
+		completedExercises := em.GetCompletedExercises()
+		fmt.Printf("📊 Found %d completed exercises to preserve\n", len(completedExercises))
 
 		// Update exercise files selectively
 		if err := updateExerciseFiles(cwd, completedExercises); err != nil {
