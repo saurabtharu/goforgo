@@ -1,6 +1,6 @@
 [exercise]
 name = "variadic_functions"
-order = 6
+order = 5
 category = "03_functions"
 difficulty = 3
 estimated_time = "8m"
