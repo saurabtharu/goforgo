@@ -1,5 +1,6 @@
 [exercise]
 name = "array_iteration"
+order = 2
 category = "05_arrays"
 difficulty = 2
 estimated_time = "8m"
@@ -26,4 +27,4 @@ level_3 = "Range values only: for _, v := range array { ... }"
 
 [metadata]
 tags = ["arrays", "iteration", "for-loops", "range"]
-related_exercises = ["04_control_flow/for_loops.go", "04_control_flow/range_loops.go"]
+related_exercises = ["03_control_flow/for_loops.go", "03_control_flow/range_loops.go"]

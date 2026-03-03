@@ -1,0 +1,30 @@
+[exercise]
+name = "closures"
+order = 8
+category = "04_functions"
+difficulty = 4
+estimated_time = "12m"
+go_version = "1.16+"
+
+[description]
+title = "Closures and Anonymous Functions"
+summary = "Learn about closures that capture and maintain state from their surrounding scope"
+learning_objectives = [
+  "Understand closure concept and variable capture",
+  "Learn how closures maintain state",
+  "Practice creating functions that return functions"
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+required_files = ["closures.go"]
+
+[hints]
+level_1 = "Closures capture variables from their surrounding scope and can modify them"
+level_2 = "Return an anonymous function: return func() int { // access outer variables }"
+level_3 = "Example: func makeCounter() func() int { count := 0; return func() int { count++; return count } }"
+
+[metadata]
+tags = ["functions", "closures", "anonymous", "state", "scope"]
+related_exercises = ["04_functions/function_types.go"]

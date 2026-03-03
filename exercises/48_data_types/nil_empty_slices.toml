@@ -1,0 +1,40 @@
+[exercise]
+name = "nil_empty_slices"
+category = "48_data_types"
+order = 3
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Nil vs Empty Slices"
+summary = "Fix bugs caused by confusing nil slices with empty slices, especially in JSON marshaling"
+learning_objectives = [
+  "Understand the difference between nil and empty slices in Go",
+  "Know that nil slices marshal to null in JSON while empty slices marshal to []",
+  "Use len(s) == 0 instead of s == nil to check emptiness",
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Nil vs Empty Slices ===
+
+--- JSON Marshaling ---
+Empty response: {"users":[],"errors":null}
+With users: {"users":["Alice","Bob"],"errors":null}
+
+--- Emptiness Checking ---
+No items to process
+No items to process
+Processing 1 items
+
+--- Filter Results ---
+No positive numbers found (correct check)"""
+timeout = "30s"
+
+[hints]
+level_1 = """A nil slice (var s []string) marshals to JSON as null. An initialized empty slice (s := []string{}) marshals as []."""
+level_2 = """Use len(items) == 0 instead of items == nil. An empty slice []string{} has length 0 but is NOT nil."""
+level_3 = """Initialize slices as []string{} (not var s []string) when you want non-nil empty results, especially for JSON responses."""
+
+[metadata]
+tags = ["slices", "nil", "empty", "json", "marshaling", "100-go-mistakes"]

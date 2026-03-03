@@ -7,7 +7,7 @@ estimated_time = "2m"
 
 [description]
 title = "Hello GoForGo"
-summary = "Your first Go program with GoForGo"
+summary = "Your first Go program with GoForGo. Edit this file in the exercises/ folder — the solutions/ folder has the answers for reference. Fix the code, save, and GoForGo will check your work automatically."
 learning_objectives = [
   "Understand basic Go program structure",
   "Learn about the main function",
@@ -20,6 +20,6 @@ expected_output = "Hello, GoForGo!"
 timeout = "10s"
 
 [hints]
-level_1 = "Look at what the TODO comment is asking you to print"
-level_2 = "You need to change the string inside fmt.Println()"
-level_3 = "Replace 'Hello, World!' with 'Hello, GoForGo!'"
+level_1 = "Open exercises/01_basics/hello.go in your editor (not the solutions/ folder — that has the answer). Look for the TODO comment."
+level_2 = "Find the fmt.Println() call and change the string inside the quotes."
+level_3 = "Replace 'Hello, World!' with 'Hello, GoForGo!' and save the file."

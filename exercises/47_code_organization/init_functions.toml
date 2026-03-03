@@ -1,0 +1,42 @@
+[exercise]
+name = "init_functions"
+order = 3
+category = "47_code_organization"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Init Functions"
+summary = "Refactor init() functions to explicit initialization for better testability"
+learning_objectives = [
+  "Understand when init() functions cause problems",
+  "Refactor implicit init() to explicit initialization functions",
+  "Recognize init() ordering dependencies as a code smell",
+  "Improve testability by removing global side effects"
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Init Functions ===
+Initializing app identity...
+Initializing features...
+Initializing config...
+
+App: GoForGo v1.0.0
+Features: goforgo-exercises, goforgo-tui, goforgo-hints
+Config:
+  app = GoForGo
+  version = 1.0.0
+  features = goforgo-exercises,goforgo-tui,goforgo-hints
+  mode = development
+
+Init refactoring complete!"""
+timeout = "30s"
+
+[hints]
+level_1 = """Remove the three init() functions and create explicit functions like initApp(), initFeatures(), and initConfig() that return their values instead of setting globals."""
+level_2 = """Each function should print its initialization message (e.g., \"Initializing app identity...\") and return the computed values. Call them in order from main()."""
+level_3 = """Create: initApp() (string, string) returning name and version, initFeatures(appName string) []string, and initConfig(name, version string, features []string) map[string]string. Call them in main() and assign to the globals."""
+
+[metadata]
+tags = ["init", "initialization", "testability", "global-state", "100-go-mistakes"]

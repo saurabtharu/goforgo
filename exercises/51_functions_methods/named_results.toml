@@ -1,0 +1,37 @@
+[exercise]
+name = "named_results"
+order = 2
+category = "51_functions_methods"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Named Result Parameters"
+summary = "Use named results for documentation and avoid naked returns for clarity"
+learning_objectives = [
+  "Use named result parameters to document ambiguous return types",
+  "Recognize when multiple same-typed returns benefit from naming",
+  "Understand why naked returns hurt readability",
+  "Replace naked returns with explicit return statements"
+]
+
+[validation]
+mode = "run"
+expected_output = """New York: lat=40.7128, lng=-74.0060
+London: lat=51.5074, lng=-0.1278
+Circle (r=5): area=78.54, circumference=31.42
+Error: radius cannot be negative: -1.00
+Circle (r=0): area=0.00, circumference=0.00
+Temperature: 100.00 C = 212.00 F"""
+timeout = "30s"
+
+[hints]
+level_1 = """Look at geocode's return type: (float64, float64). Which one is latitude
+and which is longitude? Named results like (lat, lng float64) make this clear."""
+level_2 = """In calculateCircle, each 'return' statement is a naked return. Replace them
+with explicit returns like 'return 0, 0, err' so readers know exactly what's returned."""
+level_3 = """For geocode: change to (lat, lng float64). For calculateCircle: keep named
+results but change naked returns to explicit ones. For convertTemp: add names (c, f float64)."""
+
+[metadata]
+tags = ["named-results", "naked-returns", "readability", "100-go-mistakes"]

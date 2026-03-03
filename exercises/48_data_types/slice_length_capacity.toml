@@ -1,0 +1,40 @@
+[exercise]
+name = "slice_length_capacity"
+category = "48_data_types"
+order = 2
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Slice Length vs Capacity"
+summary = "Fix bugs caused by confusing slice length and capacity, and learn efficient slice initialization"
+learning_objectives = [
+  "Understand the difference between slice length and capacity",
+  "Pre-allocate slices with make([]T, 0, cap) to avoid unnecessary reallocations",
+  "Use full slice expressions to prevent subslice aliasing bugs",
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Slice Length vs Capacity ===
+
+--- Length vs Capacity Confusion ---
+Slice: [1 2 3]
+Length: 3, Capacity: 3
+
+--- Inefficient Slice Growth ---
+Built slice of 1000 elements
+Reallocations: 0
+
+--- Subslice Append Surprise ---
+Original after append to sub: [1 2 3 4 5]
+Sub: [1 2 99]"""
+timeout = "30s"
+
+[hints]
+level_1 = """make([]int, 3) creates a slice with length=3 (three zeros already in it). make([]int, 0, 3) creates an empty slice with room for 3."""
+level_2 = """When you know the final size, use make([]int, 0, size) to pre-allocate. This avoids all reallocations during append."""
+level_3 = """Use the full slice expression s[:2:2] to limit capacity. This forces append to allocate a new backing array instead of overwriting the original."""
+
+[metadata]
+tags = ["slices", "capacity", "length", "make", "pre-allocation", "100-go-mistakes"]

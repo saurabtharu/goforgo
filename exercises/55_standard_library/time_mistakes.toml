@@ -1,0 +1,54 @@
+[exercise]
+name = "time_mistakes"
+order = 1
+category = "55_standard_library"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Time Duration and Timer Mistakes"
+summary = "Fix common time.Duration confusion (nanoseconds vs seconds) and memory leaks from time.After in loops."
+learning_objectives = [
+  "Understand that time.Duration's base unit is nanoseconds",
+  "Always use explicit time unit multipliers (time.Second, time.Millisecond)",
+  "Replace time.After in loops with time.NewTimer and Reset to avoid memory leaks",
+  "Properly drain timer channels before resetting",
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = """
+time.Duration(1000) is 1000 nanoseconds, not 1000 milliseconds.
+Go's time.Duration type uses nanoseconds as its base unit.
+To get 1 second, you need to multiply: 1 * time.Second.
+"""
+
+level_2 = """
+For the duration fix, replace `time.Duration(1000)` with `1 * time.Second`
+and `time.Duration(500)` with `500 * time.Millisecond`.
+
+For the timer leak, create a timer ONCE before the loop with time.NewTimer(),
+then Reset() it inside the loop instead of calling time.After() each time.
+"""
+
+level_3 = """
+Duration fix:
+  tickInterval := 1 * time.Second
+  timeout := 500 * time.Millisecond
+
+Timer leak fix:
+  timer := time.NewTimer(1 * time.Second)
+  defer timer.Stop()
+  // In the select, use timer.C instead of time.After()
+  // After receiving an event, reset:
+  if !timer.Stop() {
+      select { case <-timer.C: default: }
+  }
+  timer.Reset(1 * time.Second)
+"""
+
+[metadata]
+tags = ["time", "duration", "timer", "memory-leak", "100-go-mistakes", "mistake-75", "mistake-76"]

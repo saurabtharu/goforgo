@@ -5,99 +5,123 @@ All notable changes to GoForGo will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2025-08-06T11:19:00+05:30
+## [0.9.0] - 2026-03-03
 
 ### Added
-- **Exercise Validation Infrastructure**: Created comprehensive validation script `scripts/check_exercises.sh`
-  - Automated checking of all exercise triplets (exercise + solution + TOML)
-  - Category-wise breakdown and completion statistics
-  - Detection of missing components and orphaned files
-  - Verified 122 complete exercise sets with 100% completion rate
-- **Professional TUI Interface**: Replaced manual table formatting with lipgloss table widget
-  - Automatic column alignment and consistent spacing
-  - Rich column-specific colors (difficulty by level, status by completion)
-  - Dynamic column sizing based on all exercises with 10% padding
-  - Perfect alignment that prevents table resizing during scrolling
-- **Shell Integration & Automation**: Added CLI `--oneline` flag for machine-readable output
-  - Pipe-friendly format: `name|category|difficulty|status|title|time`
-  - Perfect for shell scripts and automation tools
-  - Maintains backward compatibility with existing CLI formatting
-- **Dark Terminal Optimization**: Improved color choices for better visibility
-  - Light text colors for excellent contrast against dark backgrounds
-  - Color-coded difficulty levels (green→blue→orange→red→purple)
-  - Proper selection highlighting with purple theme
+- **`goforgo solve` command**: Copy reference solutions over exercises for a range (`solve 5` or `solve 3-7`), marking them complete. Gated behind `dev` build tag — only available via `just dev-build`.
+- **`goforgo sync` command**: Re-validate every exercise and update progress to match actual state. Passes get marked complete; failures get unmarked. Includes a styled lipgloss progress bar with green fill, percentage, and current exercise name.
+- **`goforgo clean` command**: Remove build artifacts (`go.mod`, `go.sum`, compiled binaries) that accumulate in exercise directories after running exercises.
+- **TUI sync via `r` key**: Pressing `r` in the list view triggers a full sync — validates all exercises, updates progress, and refreshes the list in-place. Footer updated with `r=sync` hint.
+- **`ExerciseManager.UnmarkExerciseCompleted()`**: Inverse of `MarkExerciseCompleted()` — removes completion status and persists to disk. Used by sync to un-complete exercises that no longer pass.
+- **Auto-advance mode**: Press `a` in the main view to toggle. On successful exercise completion, shows a brief crossfade success screen then automatically moves to the next exercise after 1 second.
+- **Embedded exercises**: All exercises and solutions are now embedded in the binary via `go:embed`. `go install` works out of the box — no repo clone needed.
+- **`goforgo update` command**: Sync local exercises with the embedded content, preserving completed solutions while adding new exercises and removing stale ones.
+- **Color-coded file paths**: Exercise detail view shows category in blue and filename in orange for quick visual parsing.
+- **Vim-style navigation in list view**: `{count}j/k` motions, `gg`/`G` to jump to top/bottom, `H/M/L` screen positioning, `Ctrl+u/d` half-page scroll.
+- **GitHub Dark color scheme**: Full palette overhaul optimized for dark terminals — purple headers, green success, red errors, blue links, orange hints.
 
 ### Fixed
-- **Difficulty Display Issues**: Fixed "unknown" difficulty display in TUI
-  - Direct TOML mapping for reliable difficulty values
-  - Fallback logic for edge cases
-  - All 122 exercises now show proper difficulty levels
-- **Column Width Consistency**: Eliminated table resizing during scrolling
-  - Column widths calculated from ALL exercises, not just visible ones
-  - Dynamic sizing with 10% padding for optimal readability
-  - Consistent table layout throughout navigation
+- **Broken table layout**: Fixed column alignment, width calculation, and border overhead in the list view. Columns now size based on all exercises, not just visible ones.
+- **Exercise ordering**: Exercises sort correctly by category + order within category. Swapped control flow (ch 3) before functions (ch 4) since function exercises depend on `if` statements.
+- **Stale exercise cleanup**: `goforgo update` now removes exercises that no longer exist in the embedded content instead of only adding new ones.
+- **Resilient update**: Update command handles broken exercise directory structures gracefully instead of failing.
+- **Preserved solutions on update**: Completed exercise files are no longer overwritten when directory structure changes.
+- **Init command**: Removed hardcoded stale directory list that was creating invalid exercise folders.
+- **go.mod version**: Runner now generates correct Go version in auto-created go.mod files.
+- **Method exercises**: Moved method exercises out of `03_functions` into `08_structs` where they belong.
+- **Beginner hints**: Improved hint text to avoid prematurely revealing solutions.
 
 ### Changed
-- **Exercise Count**: Validated and confirmed 122 complete exercise sets (up from 121+)
-- **TUI Architecture**: Migrated from manual formatting to professional table widget
-- **Documentation**: Updated CLAUDE.md, TODO.md, and GAMEPLAN.md with latest achievements
-  - Reflects current status with 122 exercises and 100% validation rate
-  - Documents new TUI capabilities and shell automation features
-  - Added Phase 3.5 completion for TUI enhancements
+- **Exercise count**: 230 exercises across 57 categories (was 184).
+- **Curriculum order**: Control flow now precedes functions to match pedagogical dependencies.
+- **Dev build tag**: `just dev-build` now passes `-tags dev`, enabling dev-only commands like `solve`.
 
-## [0.3.0] - 2025-08-05T15:30:00+05:30
+## [0.8.0] - 2025-08-20
 
 ### Added
-- **Complete Exercise Validation System**: Achieved 121+ complete exercise sets
-  - Created 20 missing TOML metadata files
-  - Created 2 missing solution files  
-  - Created 3 missing exercise files for existing solutions
-  - Established three-component rule: every exercise needs .go + .toml + solution
-- **Centralized Counting Architecture**: Single source of truth for exercise counts
-  - Added GetTotalExerciseCount(), GetCompletedExerciseCount(), GetProgressStats()
-  - Updated TUI to use centralized methods instead of local counting
-  - Updated CLI list command to use ExerciseManager.GetProgressStats()
-  - Fixed discrepancy between init (121) and list (101) commands
+- **`goforgo update` command**: Update local exercise files from the embedded binary content. Preserves progress while refreshing exercise content.
+- **Run mode default**: Changed all exercises to use `run` validation mode for consistent behavior.
+
+## [0.7.0] - 2025-08-07
 
 ### Fixed
-- **Exercise Component Integrity**: Ensured all exercises have complete triplets
-- **Counting Consistency**: Eliminated discrepancies between commands
-- **Dynamic Exercise Loading**: Made system directory-agnostic
+- **Table width bug**: Fixed table rendering issue that caused misalignment at certain terminal widths.
+- **Table alignment**: Fixed column alignment and width calculation for the exercise list.
+- Updated preview image/demo recording.
 
-## [0.2.0] - 2025-08-04T12:00:00+05:30
+## [0.6.0] - 2025-08-07
 
 ### Added
-- **Professional UI/UX Polish**: Production-ready interface with animations
-  - Animated splash screen with 8-frame logo animation
-  - Color-cycling startup sequence with loading dots
-  - Beautiful ASCII art transitions and smooth timing
-- **Uniform Visual Styling**: Consistent decorative borders across all TUI pages
-- **Enhanced User Experience**: Progressive hints system and smart progress tracking
+- **Phase 5 third-party libraries**: Complete integration with 12 major Go library categories.
+  - Gorilla Mux, Cobra CLI, Bubble Tea TUI, advanced concurrency (golang.org/x/sync)
+  - GORM database, Gin web framework, Logrus logging
+  - Kafka message streaming, Kubernetes client-go (5 exercises)
+  - Hadoop HDFS/MapReduce/YARN, Spark DataFrames/streaming, Elasticsearch
+- **38 new exercises** covering the Go ecosystem with production-ready patterns.
+- Total exercise count reached **184 complete sets**.
+
+## [0.5.0] - 2025-08-06
+
+### Added
+- **Universal validation system**: TestOrchestrator with 7 pluggable validation rules (HTTP, database, process, network, concurrency, metrics, log).
+- **Testcontainers integration**: PostgreSQL and Redis containers for realistic exercise validation.
+- **ServiceRegistry**: Manages lifecycle of supporting services with health checking and automatic cleanup.
+- **Enhanced TOML configuration**: Extended validation section supporting services and rules specifications, backward compatible with legacy modes.
+
+## [0.4.0] - 2025-08-06
+
+### Added
+- **Comprehensive real-world patterns**: Microservices (service discovery, circuit breakers, distributed tracing), databases (SQL, connection pooling, NoSQL), gRPC (basics, streaming, interceptors).
+- **144+ complete exercises** across 34 categories.
+- Expanded to 133 exercises with additional standard library, crypto, networking, encoding, I/O, path, OS, math, sorting, data structures, algorithms, and web categories.
+
+## [0.3.5] - 2025-08-06
+
+### Added
+- **Professional TUI table**: Replaced manual formatting with lipgloss table widget for perfect alignment.
+- **Column-specific colors**: Difficulty colored by level (green/blue/orange/red/purple), status by completion.
+- **Dynamic column sizing**: Consistent widths based on all exercises with 10% padding.
+- **CLI `--oneline` flag**: Pipe-friendly output format for shell scripts and automation.
 
 ### Fixed
-- **Border Width Calculations**: Prevented border cutoff issues
-- **Progress Display**: Shows accurate completion percentage
-- **Responsive Design**: Adapts to different terminal sizes
+- **Difficulty display**: Fixed "unknown" difficulty in TUI — direct TOML mapping with fallback logic.
+- **Column width consistency**: Eliminated table resizing during scrolling.
 
-## [0.1.0] - 2025-08-03T10:00:00+05:30
+## [0.3.0] - 2025-08-05
 
 ### Added
-- **Core CLI Framework**: Complete command structure with Cobra
-  - `init`, `run`, `watch`, `hint`, `list`, `reset` subcommands
-  - Basic argument parsing and validation
-- **Exercise Management System**: TOML-based exercise configuration
-  - Exercise metadata structure (name, category, difficulty, hints)
-  - Exercise loading and validation logic
-  - Progress tracking and state management
-- **Bubble Tea TUI Interface**: Interactive terminal interface
-  - Progress bar with current exercise info
-  - Real-time compilation feedback
-  - Navigation between exercises
-- **File Watching System**: fsnotify integration for Go file changes
-  - Debounced compilation triggers
-  - Smart filtering (ignore temp files, build artifacts)
+- **Complete exercise validation system**: 121+ complete exercise sets verified.
+  - Created 20 missing TOML metadata files, 2 missing solution files, 3 missing exercise files.
+  - Established three-component rule: every exercise needs `.go` + `.toml` + solution.
+- **Centralized counting**: Single source of truth via `GetTotalExerciseCount()`, `GetCompletedExerciseCount()`, `GetProgressStats()`.
+
+### Fixed
+- **Counting consistency**: Fixed discrepancy between init (121) and list (101) commands.
+
+## [0.2.0] - 2025-08-04
+
+### Added
+- **Animated splash screen**: 8-frame logo animation with color-cycling startup sequence.
+- **Uniform visual styling**: Consistent decorative borders across all TUI pages.
+- **Progressive hints**: 3-level hint system that adapts to attempt count.
+- **TODO comment validation**: Exercises must have all TODO comments resolved to pass.
+
+### Fixed
+- **Border width calculations**: Prevented border cutoff issues.
+- **Progress display**: Accurate completion percentage.
+- **Responsive design**: Adapts to different terminal sizes.
+
+## [0.1.0] - 2025-08-04
+
+### Added
+- **Core CLI framework**: Cobra-based command structure with `init`, `run`, `watch`, `hint`, `list`, `reset` subcommands.
+- **Exercise management system**: TOML-based exercise configuration with metadata, hints, and validation modes.
+- **Bubble Tea TUI**: Interactive terminal interface with progress bar, real-time compilation feedback, and exercise navigation.
+- **File watching**: fsnotify integration with debounced compilation triggers and smart filtering.
+- **Progress tracking**: Persistent `.goforgo-progress.toml` with completion state and current exercise tracking.
+- **10 exercises** in `01_basics` and `02_variables` categories.
 
 ### Technical
-- **Project Structure**: Established internal/ layout for Go project
-- **Dependencies**: Added Cobra, Bubble Tea, fsnotify, TOML parser
-- **Build System**: Set up build target to ./bin/goforgo
+- Established `internal/` package layout (cli, exercise, runner, tui, watcher).
+- Dependencies: Cobra, Bubble Tea, Lip Gloss, fsnotify, BurntSushi/toml.
+- Build system with Justfile targeting `./bin/goforgo`.

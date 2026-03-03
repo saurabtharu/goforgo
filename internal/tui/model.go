@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -9,6 +10,18 @@ import (
 	"github.com/stonecharioteer/goforgo/internal/exercise"
 	"github.com/stonecharioteer/goforgo/internal/runner"
 	"github.com/stonecharioteer/goforgo/internal/watcher"
+)
+
+// ViewMode represents the current view state of the TUI.
+type ViewMode int
+
+const (
+	ViewSplash  ViewMode = iota
+	ViewWelcome
+	ViewMain
+	ViewList
+	ViewHint
+	ViewOutput
 )
 
 // Model represents the TUI application state
@@ -23,18 +36,17 @@ type Model struct {
 	runner        *runner.Runner
 	lastResult    *runner.Result
 	isRunning     bool
-	showingHint   bool
-	showingList   bool
 	currentHintLevel int  // Track current hint level (0=none, 1=level1, 2=level1+2, 3=all)
-	
+
 	// File watching
 	watcher    *watcher.Watcher
 	watcherErr error
 
 	// UI state
-	width  int
-	height int
-	ready  bool
+	viewMode ViewMode
+	width    int
+	height   int
+	ready    bool
 	
 	// List view state for scrollable exercise list
 	listSelectedIndex int // Currently selected item in list
@@ -46,17 +58,22 @@ type Model struct {
 	filterText string // Current filter text
 	
 	// Output view state
-	showingOutput    bool // Whether we're showing the output view
 	outputScrollPos  int  // Current scroll position in output view
 	outputViewHeight int  // Available height for output content
 	
 	// Progress and statistics
 	// Counts are now calculated dynamically via exerciseManager methods
 	
+	// Vim-style key sequence state
+	pendingKey   string // Buffered key for multi-key sequences (e.g., "g", "z")
+	pendingCount int    // Numeric prefix for {count}j/{count}k motions
+
+	// Auto-advance mode
+	autoAdvance    bool // When true, auto-advance to next exercise on success
+	showingSuccess bool // True during the success crossfade screen
+
 	// Messages and status
 	statusMessage string
-	showSplash    bool
-	showWelcome   bool
 	splashFrame   int
 }
 
@@ -82,8 +99,7 @@ func NewModel(exerciseManager *exercise.ExerciseManager, runner *runner.Runner) 
 		currentIndex:    currentIndex,
 		exercises:       exercises,
 		runner:          runner,
-		showSplash:      true,  // Show splash animation first
-		showWelcome:     false, // Then show welcome
+		viewMode:        ViewSplash,
 		splashFrame:     0,
 	}
 }
@@ -113,18 +129,24 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.lastResult = msg.result
 		m.isRunning = false
 		m.statusMessage = ""
-		
+
 		// Mark exercise as completed if successful and not already completed
 		if msg.result.Success && m.currentExercise != nil && !m.currentExercise.Completed {
 			if err := m.exerciseManager.MarkExerciseCompleted(m.currentExercise.Info.Name); err == nil {
 				// Update local completion tracking
 				m.currentExercise.Completed = true
-				
+
 				// Update exercises list with fresh completion status
 				m.exercises = m.exerciseManager.GetExercises()
 			}
 		}
-		
+
+		// Auto-advance: show success screen then move to next exercise
+		if msg.result.Success && m.autoAdvance && m.currentIndex < len(m.exercises)-1 {
+			m.showingSuccess = true
+			return m, tea.Batch(m.waitForFileChange(m.watcher), m.autoAdvanceTick())
+		}
+
 		return m, m.waitForFileChange(m.watcher)
 
 	case exerciseRunningMsg:
@@ -149,17 +171,27 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case autoAdvanceMsg:
+		if m.showingSuccess {
+			m.showingSuccess = false
+			return m, m.nextExercise()
+		}
+		return m, nil
+
 	case splashTickMsg:
-		if m.showSplash {
+		if m.viewMode == ViewSplash {
 			m.splashFrame++
-			if m.splashFrame >= 8 {
-				// End splash after 8 frames (~2 seconds)
-				m.showSplash = false
-				m.showWelcome = true
+			if m.splashFrame >= splashFrameCount {
+				m.viewMode = ViewWelcome
 				return m, nil
 			}
 			return m, m.splashTick()
 		}
+		return m, nil
+
+	case syncResultMsg:
+		m.exercises = m.exerciseManager.GetExercises()
+		m.statusMessage = fmt.Sprintf("Synced: %d/%d complete", msg.completed, msg.total)
 		return m, nil
 
 	case statusMsg:
@@ -178,37 +210,31 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "n":
 		// Next exercise
-		if m.showingHint || m.showingList {
-			m.showingHint = false
-			m.showingList = false
+		if m.viewMode == ViewHint || m.viewMode == ViewList {
+			m.viewMode = ViewMain
 			return m, nil
 		}
 		return m, m.nextExercise()
 
 	case "p":
 		// Previous exercise
-		if m.showingHint || m.showingList {
-			m.showingHint = false
-			m.showingList = false
+		if m.viewMode == ViewHint || m.viewMode == ViewList {
+			m.viewMode = ViewMain
 			return m, nil
 		}
 		return m, m.previousExercise()
 
 	case "h":
 		// Show next hint level or hide if at max
-		if !m.showingHint {
-			// Starting to show hints - show level 1
+		if m.viewMode != ViewHint {
 			m.currentHintLevel = 1
-			m.showingHint = true
-			m.showingList = false
+			m.viewMode = ViewHint
 		} else {
-			// Already showing hints - advance to next level or hide
 			maxLevel := m.getMaxHintLevel()
 			if m.currentHintLevel < maxLevel {
 				m.currentHintLevel++
 			} else {
-				// At max level, hide hints and reset
-				m.showingHint = false
+				m.viewMode = ViewMain
 				m.currentHintLevel = 0
 			}
 		}
@@ -216,20 +242,36 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "l":
 		// Toggle exercise list
-		if !m.showingList {
-			// Initialize list view
-			m.showingList = true
-			m.showingHint = false
-			m.listSelectedIndex = m.currentIndex // Start at current exercise
+		if m.viewMode != ViewList {
+			m.viewMode = ViewList
+			m.listSelectedIndex = m.currentIndex
 			m.listScrollOffset = 0
-			m.listViewHeight = max(m.height-8, 10) // Reserve space for header/footer, min 10 lines
+			m.listViewHeight = max(m.height-listReservedHeight, minListHeight)
 			m.ensureSelectedVisible()
 		} else {
-			m.showingList = false
+			m.viewMode = ViewMain
+		}
+		return m, nil
+
+	case "a":
+		// Toggle auto-advance mode
+		if m.viewMode == ViewMain {
+			m.autoAdvance = !m.autoAdvance
+			if m.autoAdvance {
+				m.statusMessage = "Auto-advance: ON"
+			} else {
+				m.statusMessage = "Auto-advance: OFF"
+			}
+			return m, nil
 		}
 		return m, nil
 
 	case "r":
+		if m.viewMode == ViewList {
+			// Sync all exercises in list view
+			m.statusMessage = "Syncing..."
+			return m, m.syncExercises()
+		}
 		// Manually run exercise
 		if !m.isRunning {
 			return m, m.runCurrentExercise()
@@ -238,71 +280,161 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "s":
 		// Show output view
-		if !m.showingList && !m.showingHint && !m.showingOutput && m.lastResult != nil {
-			m.showingOutput = true
+		if m.viewMode == ViewMain && m.lastResult != nil {
+			m.viewMode = ViewOutput
 			m.outputScrollPos = 0
-			m.outputViewHeight = max(m.height-8, 10) // Reserve space for header/footer
+			m.outputViewHeight = max(m.height-listReservedHeight, minListHeight)
 			return m, nil
 		}
 		return m, nil
 
 	case "up", "k":
-		if m.showingList && !m.filterMode {
-			return m, m.moveListSelection(-1)
+		if m.viewMode == ViewList && !m.filterMode {
+			count := m.consumeCount(1)
+			return m, m.moveListSelection(-count)
 		}
-		if m.showingOutput {
+		if m.viewMode == ViewOutput {
 			return m, m.scrollOutput(-1)
 		}
 		return m, nil
 
 	case "down", "j":
-		if m.showingList && !m.filterMode {
-			return m, m.moveListSelection(1)
+		if m.viewMode == ViewList && !m.filterMode {
+			count := m.consumeCount(1)
+			return m, m.moveListSelection(count)
 		}
-		if m.showingOutput {
+		if m.viewMode == ViewOutput {
 			return m, m.scrollOutput(1)
 		}
 		return m, nil
 
+	case "ctrl+u":
+		// Half-page up (vim style)
+		if m.viewMode == ViewList && !m.filterMode {
+			return m, m.moveListSelection(-m.listViewHeight / 2)
+		}
+		if m.viewMode == ViewOutput {
+			return m, m.scrollOutput(-m.outputViewHeight / 2)
+		}
+		return m, nil
+
+	case "ctrl+d":
+		// Half-page down (vim style)
+		if m.viewMode == ViewList && !m.filterMode {
+			return m, m.moveListSelection(m.listViewHeight / 2)
+		}
+		if m.viewMode == ViewOutput {
+			return m, m.scrollOutput(m.outputViewHeight / 2)
+		}
+		return m, nil
+
 	case "page_up":
-		if m.showingList && !m.filterMode {
+		if m.viewMode == ViewList && !m.filterMode {
 			return m, m.moveListSelection(-m.listViewHeight)
 		}
-		if m.showingOutput {
+		if m.viewMode == ViewOutput {
 			return m, m.scrollOutput(-m.outputViewHeight)
 		}
 		return m, nil
 
 	case "page_down":
-		if m.showingList && !m.filterMode {
+		if m.viewMode == ViewList && !m.filterMode {
 			return m, m.moveListSelection(m.listViewHeight)
 		}
-		if m.showingOutput {
+		if m.viewMode == ViewOutput {
 			return m, m.scrollOutput(m.outputViewHeight)
 		}
 		return m, nil
 
 	case "home":
-		if m.showingList && !m.filterMode {
+		if m.viewMode == ViewList && !m.filterMode {
 			m.listSelectedIndex = 0
 			m.ensureSelectedVisible()
 			return m, nil
 		}
-		if m.showingOutput {
+		if m.viewMode == ViewOutput {
 			m.outputScrollPos = 0
 			return m, nil
 		}
 		return m, nil
 
 	case "end":
-		if m.showingList && !m.filterMode {
+		if m.viewMode == ViewList && !m.filterMode {
 			filteredExercises := m.getFilteredExercises()
 			m.listSelectedIndex = len(filteredExercises) - 1
 			m.ensureSelectedVisible()
 			return m, nil
 		}
-		if m.showingOutput {
+		if m.viewMode == ViewOutput {
 			return m, m.scrollToBottom()
+		}
+		return m, nil
+
+	case "G":
+		// Go to bottom (vim style), or {count}G to go to line
+		if m.viewMode == ViewList && !m.filterMode {
+			filteredExercises := m.getFilteredExercises()
+			if m.pendingCount > 0 {
+				target := m.pendingCount - 1 // 1-indexed to 0-indexed
+				m.pendingCount = 0
+				if target >= len(filteredExercises) {
+					target = len(filteredExercises) - 1
+				}
+				m.listSelectedIndex = target
+			} else {
+				m.listSelectedIndex = len(filteredExercises) - 1
+			}
+			m.ensureSelectedVisible()
+			return m, nil
+		}
+		return m, nil
+
+	case "g":
+		// First 'g' in 'gg' sequence - go to top
+		if m.viewMode == ViewList && !m.filterMode {
+			if m.pendingKey == "g" {
+				m.pendingKey = ""
+				m.pendingCount = 0
+				m.listSelectedIndex = 0
+				m.ensureSelectedVisible()
+				return m, nil
+			}
+			m.pendingKey = "g"
+			return m, nil
+		}
+		return m, nil
+
+	case "H":
+		// Move to top of visible screen
+		if m.viewMode == ViewList && !m.filterMode {
+			m.listSelectedIndex = m.listScrollOffset
+			return m, nil
+		}
+		return m, nil
+
+	case "M":
+		// Move to middle of visible screen
+		if m.viewMode == ViewList && !m.filterMode {
+			filteredExercises := m.getFilteredExercises()
+			mid := m.listScrollOffset + m.listViewHeight/2
+			if mid >= len(filteredExercises) {
+				mid = len(filteredExercises) - 1
+			}
+			m.listSelectedIndex = mid
+			return m, nil
+		}
+		return m, nil
+
+	case "L":
+		// Move to bottom of visible screen
+		if m.viewMode == ViewList && !m.filterMode {
+			filteredExercises := m.getFilteredExercises()
+			bottom := m.listScrollOffset + m.listViewHeight - 1
+			if bottom >= len(filteredExercises) {
+				bottom = len(filteredExercises) - 1
+			}
+			m.listSelectedIndex = bottom
+			return m, nil
 		}
 		return m, nil
 
@@ -314,44 +446,57 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
-	default:
-		// Handle text input in filter mode
-		if m.filterMode && len(msg.String()) == 1 {
-			char := msg.String()
-			// Only allow alphanumeric characters, underscore, and space
-			if (char >= "a" && char <= "z") || (char >= "A" && char <= "Z") || 
-			   (char >= "0" && char <= "9") || char == "_" || char == " " {
-				m.filterText += char
-				return m, nil
-			}
-		}
-		return m, nil
-
 	case "/":
 		// Enter filter mode when in list view
-		if m.showingList && !m.filterMode {
+		if m.viewMode == ViewList && !m.filterMode {
 			m.filterMode = true
 			m.filterText = ""
 			return m, nil
 		}
 		return m, nil
 
+	default:
+		key := msg.String()
+
+		// Handle text input in filter mode
+		if m.filterMode && len(key) == 1 {
+			// Only allow alphanumeric characters, underscore, and space
+			if (key >= "a" && key <= "z") || (key >= "A" && key <= "Z") ||
+				(key >= "0" && key <= "9") || key == "_" || key == " " {
+				m.filterText += key
+				return m, nil
+			}
+		}
+
+		// Handle numeric prefix for vim-style {count} motions in list/output views
+		if !m.filterMode && (m.viewMode == ViewList || m.viewMode == ViewOutput) {
+			if key >= "0" && key <= "9" && (m.pendingCount > 0 || key != "0") {
+				digit := int(key[0] - '0')
+				m.pendingCount = m.pendingCount*10 + digit
+				return m, nil
+			}
+		}
+
+		// Clear pending key if unrecognized sequence
+		if m.pendingKey != "" {
+			m.pendingKey = ""
+			m.pendingCount = 0
+		}
+
+		return m, nil
+
 	case "enter", "esc":
-		if m.showSplash {
-			// Skip splash animation
-			m.showSplash = false
-			m.showWelcome = true
+		if m.viewMode == ViewSplash {
+			m.viewMode = ViewWelcome
 			return m, nil
 		}
-		if m.showWelcome {
-			m.showWelcome = false
+		if m.viewMode == ViewWelcome {
+			m.viewMode = ViewMain
 			return m, nil
 		}
-		if m.showingList && msg.String() == "enter" {
+		if m.viewMode == ViewList && msg.String() == "enter" {
 			if m.filterMode {
-				// Apply filter and exit filter mode
 				m.filterMode = false
-				// Reset selection to first filtered item
 				m.listSelectedIndex = 0
 				m.listScrollOffset = 0
 				return m, nil
@@ -360,7 +505,6 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			filteredExercises := m.getFilteredExercises()
 			if m.listSelectedIndex >= 0 && m.listSelectedIndex < len(filteredExercises) {
 				selectedExercise := filteredExercises[m.listSelectedIndex]
-				// Find the actual index in the full exercise list
 				for i, ex := range m.exercises {
 					if ex == selectedExercise {
 						m.currentIndex = i
@@ -368,39 +512,34 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 						break
 					}
 				}
-				m.currentHintLevel = 0 // Reset hint level for new exercise
-				m.showingList = false
-				m.filterMode = false // Reset filter when exiting list
+				m.currentHintLevel = 0
+				m.viewMode = ViewMain
+				m.filterMode = false
 				m.filterText = ""
 				return m, m.runCurrentExercise()
 			}
 		}
 		if msg.String() == "esc" {
 			if m.filterMode {
-				// Exit filter mode
 				m.filterMode = false
 				m.filterText = ""
 				return m, nil
-			} else if m.showingOutput {
-				// Exit output view
-				m.showingOutput = false
+			} else if m.viewMode == ViewOutput {
+				m.viewMode = ViewMain
 				m.outputScrollPos = 0
 				return m, nil
-			} else if m.showingList && m.filterText != "" {
-				// Clear filter if in list view with active filter
+			} else if m.viewMode == ViewList && m.filterText != "" {
 				m.filterText = ""
 				m.listSelectedIndex = 0
 				m.listScrollOffset = 0
 				return m, nil
 			}
 		}
-		// Dismiss hint or list
-		m.showingHint = false
-		m.showingList = false
-		m.showingOutput = false
-		m.filterMode = false // Reset filter when exiting list
+		// Dismiss any overlay view
+		m.viewMode = ViewMain
+		m.filterMode = false
 		m.filterText = ""
-		m.currentHintLevel = 0  // Reset hint level when dismissing
+		m.currentHintLevel = 0
 		return m, nil
 	}
 
@@ -413,27 +552,20 @@ func (m *Model) View() string {
 		return "Initializing GoForGo..."
 	}
 
-	if m.showSplash {
+	switch m.viewMode {
+	case ViewSplash:
 		return m.renderSplash()
-	}
-
-	if m.showWelcome {
+	case ViewWelcome:
 		return m.renderWelcome()
-	}
-
-	if m.showingList {
+	case ViewList:
 		return m.renderExerciseList()
-	}
-
-	if m.showingHint {
+	case ViewHint:
 		return m.renderHint()
-	}
-
-	if m.showingOutput {
+	case ViewOutput:
 		return m.renderOutput()
+	default:
+		return m.renderMain()
 	}
-
-	return m.renderMain()
 }
 
 // Custom messages for the tea program
@@ -458,6 +590,13 @@ type statusMsg struct {
 }
 
 type splashTickMsg struct{}
+
+type autoAdvanceMsg struct{}
+
+type syncResultMsg struct {
+	completed int
+	total     int
+}
 
 // Commands
 func (m *Model) runCurrentExercise() tea.Cmd {
@@ -554,41 +693,51 @@ func (m *Model) shouldProcessFileEvent(event watcher.Event) bool {
 	return strings.Contains(event.Name, m.currentExercise.Info.Name)
 }
 
-// Styles
+// consumeCount returns the pending count (or the default if no count was entered) and resets it.
+func (m *Model) consumeCount(defaultVal int) int {
+	if m.pendingCount > 0 {
+		count := m.pendingCount
+		m.pendingCount = 0
+		return count
+	}
+	return defaultVal
+}
+
+// Styles — GitHub Dark theme palette for readability on dark terminals.
 var (
 	headerStyle = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("#7C3AED")).
+		Foreground(lipgloss.Color("#bc8cff")).
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderBottom(true).
-		BorderForeground(lipgloss.Color("#7C3AED"))
+		BorderForeground(lipgloss.Color("#bc8cff"))
 
 	titleStyle = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("#1F2937"))
+		Foreground(lipgloss.Color("#e6edf3"))
 
 	successStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#10B981")).
+		Foreground(lipgloss.Color("#3fb950")).
 		Bold(true)
 
 	errorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#EF4444")).
+		Foreground(lipgloss.Color("#f85149")).
 		Bold(true)
 
 	hintStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#F59E0B")).
+		Foreground(lipgloss.Color("#d29922")).
 		Italic(true)
 
 	codeStyle = lipgloss.NewStyle().
-		Background(lipgloss.Color("#F3F4F6")).
-		Foreground(lipgloss.Color("#1F2937")).
+		Background(lipgloss.Color("#161b22")).
+		Foreground(lipgloss.Color("#e6edf3")).
 		Padding(0, 1)
 
 	progressBarStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED"))
+		Foreground(lipgloss.Color("#bc8cff"))
 
 	statusStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#6B7280")).
+		Foreground(lipgloss.Color("#8b949e")).
 		Italic(true)
 )
 
@@ -622,9 +771,16 @@ func (m *Model) getMaxHintLevel() int {
 	return maxLevel
 }
 
+// autoAdvanceTick creates a command to auto-advance after a delay
+func (m *Model) autoAdvanceTick() tea.Cmd {
+	return tea.Tick(time.Second*1, func(time.Time) tea.Msg {
+		return autoAdvanceMsg{}
+	})
+}
+
 // splashTick creates a command for splash screen animation
 func (m *Model) splashTick() tea.Cmd {
-	return tea.Tick(time.Millisecond*250, func(time.Time) tea.Msg {
+	return tea.Tick(time.Millisecond*splashTickMs, func(time.Time) tea.Msg {
 		return splashTickMsg{}
 	})
 }
@@ -726,6 +882,33 @@ func (m *Model) scrollOutput(delta int) tea.Cmd {
 	}
 	
 	return nil
+}
+
+// syncExercises validates all exercises and updates progress
+func (m *Model) syncExercises() tea.Cmd {
+	return func() tea.Msg {
+		exercises := m.exerciseManager.GetExercises()
+		completed := 0
+
+		for _, ex := range exercises {
+			result, err := m.runner.RunExercise(ex)
+			if err != nil {
+				continue
+			}
+			if result.Success {
+				if !ex.Completed {
+					m.exerciseManager.MarkExerciseCompleted(ex.Info.Name)
+				}
+				completed++
+			} else {
+				if ex.Completed {
+					m.exerciseManager.UnmarkExerciseCompleted(ex.Info.Name)
+				}
+			}
+		}
+
+		return syncResultMsg{completed: completed, total: len(exercises)}
+	}
 }
 
 // scrollToBottom scrolls the output view to the bottom

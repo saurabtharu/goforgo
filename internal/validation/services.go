@@ -148,97 +148,7 @@ func (sr *ServiceRegistry) createHTTPMockService(ctx context.Context, spec Servi
 	return service, nil
 }
 
-// Concrete service implementations (these are placeholders that will be replaced with testcontainers implementations)
-
-// PostgreSQLService represents a PostgreSQL database service
-type PostgreSQLService struct {
-	name    string
-	version string
-	config  map[string]interface{}
-	// TODO: Add testcontainers.Container field
-}
-
-func (p *PostgreSQLService) Start(ctx context.Context) error {
-	log.Printf("Starting PostgreSQL service: %s", p.name)
-	// TODO: Use testcontainers to start PostgreSQL container
-	return nil
-}
-
-func (p *PostgreSQLService) Stop(ctx context.Context) error {
-	log.Printf("Stopping PostgreSQL service: %s", p.name)
-	// TODO: Stop testcontainer
-	return nil
-}
-
-func (p *PostgreSQLService) IsReady(ctx context.Context) (bool, error) {
-	// TODO: Check if PostgreSQL is accepting connections
-	return true, nil
-}
-
-func (p *PostgreSQLService) GetConnectionInfo() *ServiceConnectionInfo {
-	// TODO: Extract real connection info from testcontainer
-	return &ServiceConnectionInfo{
-		Host:     "localhost",
-		Port:     5432,
-		Database: "testdb",
-		Username: "testuser",
-		Password: "testpass",
-		URL:      "postgresql://testuser:testpass@localhost:5432/testdb",
-		Env: map[string]string{
-			"DB_HOST":     "localhost",
-			"DB_PORT":     "5432",
-			"DB_NAME":     "testdb",
-			"DB_USER":     "testuser",
-			"DB_PASSWORD": "testpass",
-		},
-	}
-}
-
-func (p *PostgreSQLService) GetServiceType() string { return "postgresql" }
-func (p *PostgreSQLService) GetServiceName() string { return p.name }
-
-// RedisService represents a Redis cache service
-type RedisService struct {
-	name    string
-	version string
-	config  map[string]interface{}
-}
-
-func (r *RedisService) Start(ctx context.Context) error {
-	log.Printf("Starting Redis service: %s", r.name)
-	// TODO: Use testcontainers to start Redis container
-	return nil
-}
-
-func (r *RedisService) Stop(ctx context.Context) error {
-	log.Printf("Stopping Redis service: %s", r.name)
-	// TODO: Stop testcontainer
-	return nil
-}
-
-func (r *RedisService) IsReady(ctx context.Context) (bool, error) {
-	// TODO: Check if Redis is responding to PING
-	return true, nil
-}
-
-func (r *RedisService) GetConnectionInfo() *ServiceConnectionInfo {
-	// TODO: Extract real connection info from testcontainer
-	return &ServiceConnectionInfo{
-		Host: "localhost",
-		Port: 6379,
-		URL:  "redis://localhost:6379",
-		Env: map[string]string{
-			"REDIS_HOST": "localhost",
-			"REDIS_PORT": "6379",
-			"REDIS_URL":  "redis://localhost:6379",
-		},
-	}
-}
-
-func (r *RedisService) GetServiceType() string { return "redis" }
-func (r *RedisService) GetServiceName() string { return r.name }
-
-// MongoDBService represents a MongoDB database service
+// MongoDBService represents a MongoDB database service (not yet implemented)
 type MongoDBService struct {
 	name    string
 	version string
@@ -246,9 +156,7 @@ type MongoDBService struct {
 }
 
 func (m *MongoDBService) Start(ctx context.Context) error {
-	log.Printf("Starting MongoDB service: %s", m.name)
-	// TODO: Use testcontainers to start MongoDB container
-	return nil
+	return fmt.Errorf("service %q: mongodb not yet implemented", m.name)
 }
 
 func (m *MongoDBService) Stop(ctx context.Context) error {
@@ -258,8 +166,7 @@ func (m *MongoDBService) Stop(ctx context.Context) error {
 }
 
 func (m *MongoDBService) IsReady(ctx context.Context) (bool, error) {
-	// TODO: Check if MongoDB is accepting connections
-	return true, nil
+	return false, nil
 }
 
 func (m *MongoDBService) GetConnectionInfo() *ServiceConnectionInfo {
@@ -289,9 +196,7 @@ type RabbitMQService struct {
 }
 
 func (r *RabbitMQService) Start(ctx context.Context) error {
-	log.Printf("Starting RabbitMQ service: %s", r.name)
-	// TODO: Use testcontainers to start RabbitMQ container
-	return nil
+	return fmt.Errorf("service %q: rabbitmq not yet implemented", r.name)
 }
 
 func (r *RabbitMQService) Stop(ctx context.Context) error {
@@ -301,8 +206,7 @@ func (r *RabbitMQService) Stop(ctx context.Context) error {
 }
 
 func (r *RabbitMQService) IsReady(ctx context.Context) (bool, error) {
-	// TODO: Check if RabbitMQ management API is responding
-	return true, nil
+	return false, nil
 }
 
 func (r *RabbitMQService) GetConnectionInfo() *ServiceConnectionInfo {
@@ -334,9 +238,7 @@ type HTTPMockService struct {
 }
 
 func (h *HTTPMockService) Start(ctx context.Context) error {
-	log.Printf("Starting HTTP Mock service: %s", h.name)
-	// TODO: Use testcontainers to start mock HTTP server container
-	return nil
+	return fmt.Errorf("service %q: http_mock not yet implemented", h.name)
 }
 
 func (h *HTTPMockService) Stop(ctx context.Context) error {
@@ -346,8 +248,7 @@ func (h *HTTPMockService) Stop(ctx context.Context) error {
 }
 
 func (h *HTTPMockService) IsReady(ctx context.Context) (bool, error) {
-	// TODO: Check if HTTP mock server is responding
-	return true, nil
+	return false, nil
 }
 
 func (h *HTTPMockService) GetConnectionInfo() *ServiceConnectionInfo {

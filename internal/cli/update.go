@@ -2,11 +2,13 @@ package cli
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
+	goforgo "github.com/stonecharioteer/goforgo"
 	"github.com/stonecharioteer/goforgo/internal/exercise"
 )
 
@@ -35,13 +37,15 @@ This command will:
 
 		fmt.Println("🔄 Updating GoForGo exercise files...")
 
-		// Load exercise manager to get completion status
+		// Load exercise manager to get completion status.
+		// Progress is loaded from .goforgo-progress.toml independently of
+		// exercise scanning, so completed exercises are available even when
+		// the directory structure has changed between versions.
 		em := exercise.NewExerciseManager(cwd)
 		if err := em.LoadExercises(); err != nil {
-			return fmt.Errorf("failed to load exercises: %w", err)
+			fmt.Println("⚠️  Could not load current exercises (structure may have changed)")
+			fmt.Println("   Completed exercises will still be preserved from progress file.")
 		}
-
-		// Get completed exercises
 		completedExercises := em.GetCompletedExercises()
 		fmt.Printf("📊 Found %d completed exercises to preserve\n", len(completedExercises))
 
@@ -57,68 +61,34 @@ This command will:
 }
 
 func updateExerciseFiles(baseDir string, completedExercises map[string]bool) error {
-	sourceExercises := ""
-	sourceSolutions := ""
+	fmt.Println("📂 Updating from embedded exercises...")
 
-	// Find source directories (same logic as initialize.go)
-	execPath, err := os.Executable()
-	if err != nil {
-		execPath = ""
-	}
-
-	var possiblePaths []string
-	if execPath != "" {
-		execDir := filepath.Dir(execPath)
-		possiblePaths = append(possiblePaths,
-			filepath.Join(execDir, "exercises"),
-			filepath.Join(execDir, "..", "exercises"),
-			filepath.Join(execDir, "..", "..", "exercises"),
-		)
-	}
-
-	possiblePaths = append(possiblePaths,
-		"exercises",
-		"../exercises",
-		"../../exercises",
-	)
-
-	for _, path := range possiblePaths {
-		if _, err := os.Stat(path); err == nil {
-			sourceExercises = path
-			sourceSolutions = strings.Replace(path, "exercises", "solutions", 1)
-			break
-		}
-	}
-
-	if sourceExercises == "" {
-		return fmt.Errorf("no source exercises found in binary location")
-	}
-
-	fmt.Printf("📂 Updating from source: %s\n", sourceExercises)
-
-	// Walk through source exercises and update selectively
-	err = filepath.Walk(sourceExercises, func(srcPath string, info os.FileInfo, err error) error {
+	// Walk through embedded exercises and update selectively
+	err := fs.WalkDir(goforgo.Content, "exercises", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		relPath, err := filepath.Rel(sourceExercises, srcPath)
+		relPath, err := filepath.Rel("exercises", path)
 		if err != nil {
 			return err
 		}
 		destPath := filepath.Join(baseDir, "exercises", relPath)
 
-		if info.IsDir() {
-			// Ensure directory exists
+		if d.IsDir() {
 			return os.MkdirAll(destPath, 0755)
 		}
 
 		// Determine if we should update this file
-		shouldUpdate := shouldUpdateFile(srcPath, destPath, relPath, completedExercises)
-		
+		shouldUpdate := shouldUpdateFile("", destPath, relPath, completedExercises)
+
 		if shouldUpdate {
 			fmt.Printf("  📝 Updating: %s\n", relPath)
-			return copyFile(srcPath, destPath)
+			content, readErr := goforgo.Content.ReadFile(path)
+			if readErr != nil {
+				return readErr
+			}
+			return os.WriteFile(destPath, content, 0644)
 		} else {
 			fmt.Printf("  ⏭️  Preserving: %s (exercise completed)\n", relPath)
 		}
@@ -131,28 +101,138 @@ func updateExerciseFiles(baseDir string, completedExercises map[string]bool) err
 	}
 
 	// Update solutions directory too (these are reference solutions)
-	if _, err := os.Stat(sourceSolutions); err == nil {
-		fmt.Printf("📂 Updating solutions from: %s\n", sourceSolutions)
-		return filepath.Walk(sourceSolutions, func(srcPath string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
+	fmt.Println("📂 Updating solutions...")
+	err = fs.WalkDir(goforgo.Content, "solutions", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
 
-			relPath, err := filepath.Rel(sourceSolutions, srcPath)
-			if err != nil {
-				return err
-			}
-			destPath := filepath.Join(baseDir, "solutions", relPath)
+		relPath, err := filepath.Rel("solutions", path)
+		if err != nil {
+			return err
+		}
+		destPath := filepath.Join(baseDir, "solutions", relPath)
 
-			if info.IsDir() {
-				return os.MkdirAll(destPath, 0755)
-			}
+		if d.IsDir() {
+			return os.MkdirAll(destPath, 0755)
+		}
 
-			fmt.Printf("  📝 Updating solution: %s\n", relPath)
-			return copyFile(srcPath, destPath)
-		})
+		fmt.Printf("  📝 Updating solution: %s\n", relPath)
+		content, readErr := goforgo.Content.ReadFile(path)
+		if readErr != nil {
+			return readErr
+		}
+		return os.WriteFile(destPath, content, 0644)
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update solutions: %w", err)
 	}
 
+	// Remove stale files that no longer exist in embedded content
+	fmt.Println("🧹 Cleaning up removed exercises...")
+	removed, err := removeStaleFiles(baseDir)
+	if err != nil {
+		return fmt.Errorf("failed to clean up stale files: %w", err)
+	}
+	if removed > 0 {
+		fmt.Printf("  🗑️  Removed %d stale files\n", removed)
+	}
+
+	return nil
+}
+
+// collectEmbeddedPaths builds a set of all relative file paths in an embedded directory.
+func collectEmbeddedPaths(root string) (map[string]bool, error) {
+	paths := make(map[string]bool)
+	err := fs.WalkDir(goforgo.Content, root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			relPath, relErr := filepath.Rel(root, path)
+			if relErr != nil {
+				return relErr
+			}
+			paths[relPath] = true
+		}
+		return nil
+	})
+	return paths, err
+}
+
+// removeStaleFiles removes files from on-disk exercises/ and solutions/ that
+// no longer exist in the embedded content, then prunes empty directories.
+func removeStaleFiles(baseDir string) (int, error) {
+	removed := 0
+
+	for _, dir := range []string{"exercises", "solutions"} {
+		embeddedPaths, err := collectEmbeddedPaths(dir)
+		if err != nil {
+			return removed, fmt.Errorf("failed to collect embedded %s paths: %w", dir, err)
+		}
+
+		diskDir := filepath.Join(baseDir, dir)
+		if _, err := os.Stat(diskDir); os.IsNotExist(err) {
+			continue
+		}
+
+		// Remove files not in the embedded set
+		err = filepath.Walk(diskDir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() {
+				return nil
+			}
+			relPath, relErr := filepath.Rel(diskDir, path)
+			if relErr != nil {
+				return relErr
+			}
+			if !embeddedPaths[relPath] {
+				fmt.Printf("  🗑️  Removing stale file: %s/%s\n", dir, relPath)
+				if rmErr := os.Remove(path); rmErr != nil {
+					return rmErr
+				}
+				removed++
+			}
+			return nil
+		})
+		if err != nil {
+			return removed, err
+		}
+
+		// Prune empty directories (walk in reverse depth order)
+		_ = pruneEmptyDirs(diskDir)
+	}
+
+	return removed, nil
+}
+
+// pruneEmptyDirs removes empty directories under root, bottom-up.
+func pruneEmptyDirs(root string) error {
+	// Collect directories bottom-up
+	var dirs []string
+	_ = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if info.IsDir() && path != root {
+			dirs = append(dirs, path)
+		}
+		return nil
+	})
+
+	// Remove in reverse order (deepest first)
+	for i := len(dirs) - 1; i >= 0; i-- {
+		entries, err := os.ReadDir(dirs[i])
+		if err != nil {
+			continue
+		}
+		if len(entries) == 0 {
+			fmt.Printf("  🗑️  Removing empty directory: %s\n", dirs[i])
+			_ = os.Remove(dirs[i])
+		}
+	}
 	return nil
 }
 

@@ -310,6 +310,20 @@ func (em *ExerciseManager) MarkExerciseCompleted(exerciseName string) error {
 	return em.saveProgress()
 }
 
+// UnmarkExerciseCompleted marks an exercise as incomplete and updates progress
+func (em *ExerciseManager) UnmarkExerciseCompleted(exerciseName string) error {
+	for _, exercise := range em.exercises {
+		if exercise.Info.Name == exerciseName {
+			exercise.Completed = false
+			break
+		}
+	}
+
+	delete(em.progress.CompletedExercises, exerciseName)
+
+	return em.saveProgress()
+}
+
 // UpdateExerciseProgress updates the completion status of exercises based on progress
 func (em *ExerciseManager) UpdateExerciseProgress() {
 	for _, exercise := range em.exercises {

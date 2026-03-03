@@ -1,0 +1,36 @@
+[exercise]
+name = "test_organization"
+order = 1
+category = "56_testing_mistakes"
+difficulty = 3
+estimated_time = "20m"
+
+[description]
+title = "Test Organization"
+summary = "Refactor poorly organized tests into table-driven tests with subtests"
+learning_objectives = [
+  "Use table-driven tests to eliminate duplicate test logic",
+  "Use t.Run for clear subtest naming and selective execution",
+  "Understand test categorization and execution flags",
+  "Consolidate repetitive assertions into structured test cases",
+]
+
+[validation]
+mode = "test"
+timeout = "30s"
+
+[hints]
+level_1 = """Table-driven tests use a slice of structs to define test cases:
+tests := []struct {
+    name     string
+    input    int
+    expected string
+}{...}"""
+level_2 = """Use t.Run(name, func(t *testing.T) {...}) to create named subtests.
+This lets you run individual cases with 'go test -run TestName/subtest'."""
+level_3 = """Consolidate all Categorize tests into one TestCategorize function,
+all FizzBuzz tests into one TestFizzBuzz, and all ValidateEmail tests into
+one TestValidateEmail. Each should iterate over a test case table."""
+
+[metadata]
+tags = ["testing", "table-driven-tests", "subtests", "100-go-mistakes"]

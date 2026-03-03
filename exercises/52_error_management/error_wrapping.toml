@@ -1,0 +1,43 @@
+[exercise]
+name = "error_wrapping"
+category = "52_error_management"
+order = 2
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Error Wrapping"
+summary = "Fix three common error wrapping mistakes: missing context, wrong verb, and leaking internals"
+learning_objectives = [
+  "Add context to errors with fmt.Errorf and %w for meaningful error messages",
+  "Understand the difference between %v (loses chain) and %w (preserves chain)",
+  "Know when NOT to wrap errors to avoid leaking implementation details",
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Error Wrapping ===
+--- Fix 1: Context Added ---
+Error: getUser id=42: not found
+Is ErrNotFound: true
+Has context about what failed: yes
+
+--- Fix 2: Correct Verb ---
+Error: handleRequest: getUser id=42: not found
+Is ErrNotFound: true (chain preserved by %w!)
+
+--- Fix 3: Implementation Hidden ---
+Error: cache unavailable for key "session-abc"
+Is errRedisDown: false (implementation detail hidden!)"""
+timeout = "30s"
+
+[hints]
+level_1 = """Bug 1: Wrap errors with context so callers know what failed.
+Use fmt.Errorf("getUser id=%d: %w", id, err) to add context while preserving the chain."""
+level_2 = """Bug 2: Use %w instead of %v in fmt.Errorf to preserve the error chain.
+With %w, errors.Is and errors.As can still find the original error."""
+level_3 = """Bug 3: When you don't want callers to depend on internal errors, use %v (or create
+a new error entirely) instead of %w. This hides the implementation detail."""
+
+[metadata]
+tags = ["error-wrapping", "fmt-errorf", "context", "100-go-mistakes"]

@@ -1,0 +1,28 @@
+[exercise]
+name = "stack_heap_alloc"
+order = 2
+category = "57_optimizations"
+difficulty = 4
+estimated_time = "20m"
+
+[description]
+title = "Stack vs Heap Allocations"
+summary = "Reduce heap allocations by using value slices instead of pointer slices and sync.Pool for buffer reuse"
+learning_objectives = [
+  "Understand when Go values escape from stack to heap",
+  "Use value slices instead of pointer slices to reduce allocations",
+  "Know that storing pointers in collections forces heap escape",
+  "Use sync.Pool to reuse allocations in hot loops"
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = """When you store a *Point in a slice, each Point must be allocated on the heap separately. When you store Point (value) in a slice, all values live contiguously inside the slice's backing array - one allocation instead of N."""
+level_2 = """For collectPointsValue: change `make([]*Point, 0, n)` to `make([]Point, 0, n)`, change `&Point{X: ..., Y: ...}` to `Point{X: ..., Y: ...}`, and change `p.X` to `p.X` (same syntax, but now p is a Point value, not a pointer)."""
+level_3 = """For Part 1: points := make([]Point, 0, n); p := Point{...}; append(points, p). For Part 2: pool := &sync.Pool{New: func() any { return make([]byte, 1024) }}; buf := pool.Get().([]byte); ... pool.Put(buf)."""
+
+[metadata]
+tags = ["escape-analysis", "heap", "stack", "sync-pool", "allocations", "100-go-mistakes"]

@@ -1,5 +1,6 @@
 [exercise]
 name = "goroutines_basics"
+order = 1
 category = "11_concurrency"
 difficulty = 2
 estimated_time = "12m"
@@ -27,4 +28,4 @@ level_3 = "Anonymous goroutine: go func() { ... }()"
 
 [metadata]
 tags = ["concurrency", "goroutines", "waitgroup", "channels"]
-related_exercises = ["04_control_flow/select_statements.go"]
+related_exercises = ["03_control_flow/select_statements.go"]

@@ -1,0 +1,35 @@
+[exercise]
+name = "race_conditions"
+order = 3
+category = "53_concurrency_foundations"
+difficulty = 4
+estimated_time = "20m"
+
+[description]
+title = "Race Conditions & Workload Types"
+summary = "Distinguish data races from race conditions, and understand I/O-bound vs CPU-bound workloads"
+learning_objectives = [
+  "Fix a data race by adding mutex synchronization",
+  "Recognize a race condition where mutex alone isn't enough (check-then-act)",
+  "Make check-and-act sequences atomic to prevent race conditions",
+  "Understand I/O-bound vs CPU-bound workloads and their concurrency implications",
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = "Part 1: Declare var mu sync.Mutex, then wrap counter++ with mu.Lock() and mu.Unlock()."
+level_2 = "Part 2: The bug is that Balance() and Withdraw() are separate critical sections. Hold one lock across both operations."
+level_3 = """Part 2 fix: In the transfer function, lock from.mu directly:
+  from.mu.Lock()
+  if from.balance >= amount {
+    from.balance -= amount
+    // success
+  }
+  from.mu.Unlock()
+This makes check-and-act atomic."""
+
+[metadata]
+tags = ["data-race", "race-condition", "mutex", "workloads", "GOMAXPROCS", "100-go-mistakes"]

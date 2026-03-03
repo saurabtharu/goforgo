@@ -1,0 +1,35 @@
+[exercise]
+name = "receiver_types"
+order = 1
+category = "51_functions_methods"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Receiver Types"
+summary = "Learn the rules for choosing between pointer and value receivers"
+learning_objectives = [
+  "Understand when to use pointer receivers (mutation, large structs, sync.Mutex)",
+  "Understand when to use value receivers (small immutable types)",
+  "Recognize that copying a sync.Mutex is a bug",
+  "Apply receiver type consistency within a type"
+]
+
+[validation]
+mode = "run"
+expected_output = """Owner: Alice
+Balance: 120.00
+Distance: 7.00
+Equal: true"""
+timeout = "30s"
+
+[hints]
+level_1 = """BankAccount methods need to modify the struct's fields.
+What happens when you call a method on a value receiver - does the caller see the changes?"""
+level_2 = """The BankAccount struct contains a sync.Mutex. Mutexes must never be copied
+after first use. A value receiver copies the entire struct, including the mutex."""
+level_3 = """Change BankAccount's methods to pointer receivers: func (a *BankAccount).
+Change Point's methods to value receivers: func (p Point) since Point is small and read-only."""
+
+[metadata]
+tags = ["receivers", "pointer-vs-value", "sync.Mutex", "100-go-mistakes"]

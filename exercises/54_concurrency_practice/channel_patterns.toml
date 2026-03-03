@@ -1,0 +1,29 @@
+[exercise]
+name = "channel_patterns"
+order = 3
+category = "54_concurrency_practice"
+difficulty = 4
+estimated_time = "25m"
+
+[description]
+title = "Channel Patterns"
+summary = "Master correct channel usage: priority select, notification channels, nil channels, and sizing"
+learning_objectives = [
+  "Understand that select picks randomly between ready cases (no priority)",
+  "Use chan struct{} for zero-cost signaling instead of chan bool",
+  "Set channels to nil to disable select cases for fan-in patterns",
+  "Size buffered channels correctly to prevent goroutine leaks"
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = "Select priority: you can't rely on case order. Use a nested select - first try high-priority in a non-blocking select (with default), then fall through."
+level_2 = "Nil channels: after detecting a closed channel with 'v, ok := <-ch', if !ok then set ch = nil. A nil channel in select blocks forever, disabling that case."
+level_3 = "Channel sizing: make(chan int, n) creates a buffered channel. When you know exactly how many values will be sent, buffer to that size to prevent producer goroutines from blocking."
+
+[metadata]
+tags = ["concurrency", "channels", "select", "patterns", "100-go-mistakes", "mistake-64", "mistake-65", "mistake-66", "mistake-67"]
+related_exercises = ["11_concurrency/channels_basics.go"]

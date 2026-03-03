@@ -1,0 +1,28 @@
+[exercise]
+name = "go_in_containers"
+order = 1
+category = "57_optimizations"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "GOMAXPROCS in Containers"
+summary = "Set GOMAXPROCS correctly for containerized Go applications"
+learning_objectives = [
+  "Understand why runtime.NumCPU() returns wrong values in containers",
+  "Detect container CPU limits via cgroups filesystem",
+  "Set GOMAXPROCS appropriately based on environment",
+  "Know about uber-go/automaxprocs for production container deployments"
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = """runtime.NumCPU() returns the host machine's CPU count, not the container's limit. In a container with 2 CPU cores on a 64-core host, NumCPU() returns 64. This makes GOMAXPROCS far too high, wasting resources on thread scheduling."""
+level_2 = """In setContainerAwareGOMAXPROCS: first check os.Getenv("GOMAXPROCS") for an explicit override. Then try detectContainerCPULimit(). Fall back to runtime.NumCPU(). Call runtime.GOMAXPROCS(cpus) with whichever value you determined."""
+level_3 = """Complete implementation: envVal := os.Getenv("GOMAXPROCS"); if envVal != "" { n, _ := strconv.Atoi(envVal); if n > 0 { runtime.GOMAXPROCS(n); return n } }. Then: limit := detectContainerCPULimit(); if limit > 0 { runtime.GOMAXPROCS(limit); return limit }. Finally: cpus := runtime.NumCPU(); runtime.GOMAXPROCS(cpus); return cpus."""
+
+[metadata]
+tags = ["containers", "gomaxprocs", "docker", "kubernetes", "runtime", "100-go-mistakes"]

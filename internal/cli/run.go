@@ -25,15 +25,8 @@ Examples:
 }
 
 func runExercise(cmd *cobra.Command, args []string) error {
-	// Get working directory
-	cwd, err := GetWorkingDirectory()
+	em, cwd, err := loadExerciseManager()
 	if err != nil {
-		return fmt.Errorf("failed to get working directory: %w", err)
-	}
-
-	// Initialize exercise manager
-	em := exercise.NewExerciseManager(cwd)
-	if err := em.LoadExercises(); err != nil {
 		return err
 	}
 

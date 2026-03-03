@@ -1,0 +1,37 @@
+[exercise]
+name = "nested_code"
+order = 2
+category = "47_code_organization"
+difficulty = 2
+estimated_time = "10m"
+
+[description]
+title = "Nested Code"
+summary = "Refactor deeply nested code using early returns and guard clauses"
+learning_objectives = [
+  "Identify deeply nested code as a readability problem",
+  "Apply the guard clause pattern to flatten nesting",
+  "Use early returns to handle edge cases first",
+  "Keep the happy path at the lowest indentation level"
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Nested Code Refactoring ===
+Error: Nil order
+Error: Missing customer name
+Order 2: No items in order
+Order 3: Invalid total ($-5.00)
+Order 4: Payment pending ($999.99)
+Order 5: Shipping 3 items worth $549.50 to Diana in JP
+
+All orders processed!"""
+timeout = "30s"
+
+[hints]
+level_1 = """Instead of nesting each condition deeper, check for the error case and return early. Start with the nil check at the top."""
+level_2 = """The pattern is: if order == nil { return error } then if order.Customer == \"\" { return error } and so on. Each check is at the same indentation level."""
+level_3 = """Flip each condition: instead of 'if order != nil { if customer != \"\" { ... } }', write 'if order == nil { return error }' then 'if customer == \"\" { return error }' then continue with the happy path."""
+
+[metadata]
+tags = ["nesting", "guard-clauses", "early-returns", "readability", "100-go-mistakes"]

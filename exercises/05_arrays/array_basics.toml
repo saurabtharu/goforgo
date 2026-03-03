@@ -1,5 +1,6 @@
 [exercise]
 name = "array_basics"
+order = 1
 category = "05_arrays"
 difficulty = 1
 estimated_time = "5m"

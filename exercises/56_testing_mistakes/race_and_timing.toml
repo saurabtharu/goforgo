@@ -1,0 +1,37 @@
+[exercise]
+name = "race_and_timing"
+order = 2
+category = "56_testing_mistakes"
+difficulty = 4
+estimated_time = "20m"
+
+[description]
+title = "Race Detection and Time-Based Testing"
+summary = "Fix data races, replace time.Sleep in tests, and abstract time for testability"
+learning_objectives = [
+  "Enable and understand the Go race detector (-race flag)",
+  "Fix data races with proper synchronization primitives",
+  "Replace time.Sleep in tests with proper synchronization",
+  "Use clock interface abstraction for testable time-dependent code",
+]
+
+[validation]
+mode = "test"
+timeout = "30s"
+
+[hints]
+level_1 = """The Counter needs a sync.Mutex to protect concurrent access.
+Add a mu field and lock/unlock in Increment() and Value()."""
+level_2 = """Replace time.Sleep in TestConcurrentCounter with sync.WaitGroup:
+var wg sync.WaitGroup
+wg.Add(numGoroutines)
+go func() { defer wg.Done(); counter.Increment() }()
+wg.Wait()"""
+level_3 = """For Cache, add a clock Clock field and use it instead of time.Now().
+Create a FakeClock in tests that lets you control time:
+type FakeClock struct { now time.Time }
+func (f *FakeClock) Now() time.Time { return f.now }
+func (f *FakeClock) Advance(d time.Duration) { f.now = f.now.Add(d) }"""
+
+[metadata]
+tags = ["testing", "race-detection", "concurrency", "time-abstraction", "100-go-mistakes"]

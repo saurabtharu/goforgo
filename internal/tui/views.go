@@ -2,11 +2,39 @@ package tui
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 )
+
+// Layout and animation constants.
+const (
+	contentPadding      = 10
+	minContentWidth     = 50
+	maxContentWidth     = 90
+	borderCharWidth     = 80
+	progressBarWidth    = 30
+	splashFrameCount    = 8
+	splashTickMs        = 250
+	listReservedHeight  = 8
+	minListHeight       = 10
+	columnPaddingFactor = 1.1
+	minColumnWidth      = 3
+)
+
+// getContentWidth returns the usable content width for the current terminal size.
+func (m *Model) getContentWidth() int {
+	w := m.width - contentPadding
+	if w < minContentWidth {
+		w = minContentWidth
+	}
+	if w > maxContentWidth {
+		w = maxContentWidth
+	}
+	return w
+}
 
 // renderWelcome shows the welcome screen (like Rustlings)
 func (m *Model) renderWelcome() string {
@@ -21,7 +49,7 @@ func (m *Model) renderWelcome() string {
 
 	// Gradient colors for the logo
 	logoStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
+		Foreground(lipgloss.Color("#bc8cff")).
 		Bold(true).
 		Align(lipgloss.Center)
 
@@ -30,7 +58,7 @@ func (m *Model) renderWelcome() string {
 
 	// Subtitle with gradient
 	subtitleStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#A855F7")).
+		Foreground(lipgloss.Color("#d2a8ff")).
 		Bold(true).
 		Italic(true).
 		Align(lipgloss.Center)
@@ -38,17 +66,17 @@ func (m *Model) renderWelcome() string {
 	subtitle := subtitleStyle.Render("🚀 Interactive Go Learning Platform 🚀")
 
 	// Stats section with progress - use dynamic completed count
-	progressBar := m.renderProgressBar(m.getCompletedCount(), m.getTotalCount(), 30)
+	progressBar := m.renderProgressBar(m.getCompletedCount(), m.getTotalCount(), progressBarWidth)
 
 	statsStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#10B981")).
+		Foreground(lipgloss.Color("#3fb950")).
 		Bold(true)
 
 	statsText := statsStyle.Render(fmt.Sprintf("📊 Progress: %s %d/%d exercises completed", progressBar, m.getCompletedCount(), m.getTotalCount()))
 
 	// Feature highlights with emojis and colors
 	featuresStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#3B82F6"))
+		Foreground(lipgloss.Color("#58a6ff"))
 
 	features := featuresStyle.Render(`✨ What makes GoForGo special:
    🔥 Real-time feedback as you code
@@ -59,7 +87,7 @@ func (m *Model) renderWelcome() string {
 
 	// Learning topics with nice formatting
 	topicsStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#F59E0B"))
+		Foreground(lipgloss.Color("#d29922"))
 
 	topics := topicsStyle.Render(fmt.Sprintf(`📚 %d exercises covering:
    • Go fundamentals & syntax        • Error handling patterns
@@ -71,9 +99,9 @@ func (m *Model) renderWelcome() string {
 	// Keyboard shortcuts in a nice box
 	shortcutsStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#EC4899")).
+		BorderForeground(lipgloss.Color("#f778ba")).
 		Padding(0, 1).
-		Foreground(lipgloss.Color("#EC4899"))
+		Foreground(lipgloss.Color("#f778ba"))
 
 	shortcuts := shortcutsStyle.Render(`⌨️  Keyboard Shortcuts:
  Enter/Space  Start your Go journey  |  h  Progressive hints
@@ -98,9 +126,9 @@ func (m *Model) renderWelcome() string {
 	if m.currentExercise != nil {
 		nextStyle := lipgloss.NewStyle().
 			Border(lipgloss.DoubleBorder()).
-			BorderForeground(lipgloss.Color("#10B981")).
+			BorderForeground(lipgloss.Color("#3fb950")).
 			Padding(0, 2).
-			Foreground(lipgloss.Color("#10B981")).
+			Foreground(lipgloss.Color("#3fb950")).
 			Bold(true)
 
 		nextExercise := nextStyle.Render(fmt.Sprintf(`🎯 Next Exercise: %s
@@ -117,15 +145,15 @@ func (m *Model) renderWelcome() string {
 
 	// Call to action with pulsing effect styling
 	ctaStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FBBF24")).
+		Foreground(lipgloss.Color("#e3b341")).
 		Bold(true).
 		Blink(true)
 
 	welcomeText += ctaStyle.Render("✨ Press Enter to begin your Go journey! ✨")
 
 	// Add decorative border using text characters
-	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED"))
-	borderLine := borderStyle.Render(strings.Repeat("═", 80))
+	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#bc8cff"))
+	borderLine := borderStyle.Render(strings.Repeat("═", borderCharWidth))
 
 	welcomeText = fmt.Sprintf(`%s
 %s
@@ -134,13 +162,7 @@ func (m *Model) renderWelcome() string {
 	// Center and style the entire content
 	// Account for border (2 chars) and padding (4 chars) = 6 chars total
 	// Add extra margin for safety
-	contentWidth := m.width - 10
-	if contentWidth < 50 {
-		contentWidth = 50 // Minimum readable width
-	}
-	if contentWidth > 90 {
-		contentWidth = 90 // Maximum width to prevent overly wide content
-	}
+	contentWidth := m.getContentWidth()
 
 	// Use a simpler approach without overall border to avoid width issues
 	style := lipgloss.NewStyle().
@@ -182,26 +204,20 @@ func (m *Model) renderMain() string {
 	mainContent := content.String()
 
 	// Add decorative border using text characters
-	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED"))
-	borderLine := borderStyle.Render(strings.Repeat("═", 80))
+	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#bc8cff"))
+	borderLine := borderStyle.Render(strings.Repeat("═", borderCharWidth))
 
 	borderedContent := fmt.Sprintf(`%s
 %s
 %s`, borderLine, mainContent, borderLine)
 
-	// Center and style the content consistently
-	contentWidth := m.width - 10
-	if contentWidth < 50 {
-		contentWidth = 50 // Minimum readable width
-	}
-	if contentWidth > 90 {
-		contentWidth = 90 // Maximum width to prevent overly wide content
-	}
+	// Style the content left-aligned
+	contentWidth := m.getContentWidth()
 
 	style := lipgloss.NewStyle().
 		Width(contentWidth).
-		Align(lipgloss.Center).
-		Padding(1, 0)
+		Align(lipgloss.Left).
+		Padding(1, 2)
 
 	return style.Render(borderedContent)
 }
@@ -212,7 +228,7 @@ func (m *Model) renderHeader() string {
 	progressPercent := int(progress * 100)
 
 	// Use the existing renderProgressBar function with a reasonable width
-	progressBar := m.renderProgressBar(m.getCompletedCount(), m.getTotalCount(), 30)
+	progressBar := m.renderProgressBar(m.getCompletedCount(), m.getTotalCount(), progressBarWidth)
 	progressText := fmt.Sprintf("%d/%d (%d%%)", m.getCompletedCount(), m.getTotalCount(), progressPercent)
 
 	header := fmt.Sprintf(`%s
@@ -230,7 +246,19 @@ func (m *Model) renderExerciseInfo() string {
 	ex := m.currentExercise
 
 	difficulty := ex.GetDifficultyString()
-	filePath := codeStyle.Render(ex.FilePath)
+	base := filepath.Base(ex.FilePath)
+	category := filepath.Base(filepath.Dir(ex.FilePath))
+	categoryStyle := lipgloss.NewStyle().
+		Background(lipgloss.Color("#161b22")).
+		Foreground(lipgloss.Color("#58a6ff")).
+		Bold(true).
+		Padding(0, 0, 0, 1)
+	baseStyle := lipgloss.NewStyle().
+		Background(lipgloss.Color("#161b22")).
+		Foreground(lipgloss.Color("#f0883e")).
+		Bold(true).
+		Padding(0, 1, 0, 0)
+	filePath := categoryStyle.Render(category+"/") + baseStyle.Render(base)
 
 	info := fmt.Sprintf(`📝 Current Exercise: %s
 📁 File: %s
@@ -255,6 +283,16 @@ func (m *Model) renderExerciseInfo() string {
 
 // renderResults shows compilation/execution results
 func (m *Model) renderResults() string {
+	// Auto-advance crossfade success screen
+	if m.showingSuccess {
+		crossfadeStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#3fb950")).
+			Bold(true).
+			Align(lipgloss.Center)
+
+		return crossfadeStyle.Render("✅ Exercise completed! Moving on...")
+	}
+
 	if m.isRunning {
 		return statusStyle.Render("🔄 Running exercise...")
 	}
@@ -272,7 +310,11 @@ func (m *Model) renderResults() string {
 
 		if m.currentIndex < len(m.exercises)-1 {
 			result.WriteString("\n")
-			result.WriteString(statusStyle.Render("Press 'n' for the next exercise."))
+			if m.autoAdvance {
+				result.WriteString(statusStyle.Render("Auto-advancing to the next exercise..."))
+			} else {
+				result.WriteString(statusStyle.Render("Press 'n' for the next exercise."))
+			}
 		} else {
 			result.WriteString("\n")
 			result.WriteString(successStyle.Render("🏆 All exercises completed! You're a Go expert!"))
@@ -309,6 +351,11 @@ func (m *Model) renderResults() string {
 
 // renderFooter shows keyboard shortcuts
 func (m *Model) renderFooter() string {
+	autoAdvanceLabel := "[a] auto-adv"
+	if m.autoAdvance {
+		autoAdvanceLabel = "[a] auto-adv:ON"
+	}
+
 	shortcuts := []string{
 		"[n] next",
 		"[p] prev",
@@ -316,6 +363,7 @@ func (m *Model) renderFooter() string {
 		"[l] list",
 		"[r] run",
 		"[s] output",
+		autoAdvanceLabel,
 		"[q] quit",
 	}
 
@@ -346,8 +394,8 @@ func (m *Model) renderProgressBar(completed, total, width int) string {
 	empty := strings.Repeat("░", emptyWidth)
 
 	// Color the progress bar
-	filledStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#10B981"))
-	emptyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#6B7280"))
+	filledStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#3fb950"))
+	emptyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#8b949e"))
 
 	return fmt.Sprintf("[%s%s]", filledStyle.Render(filled), emptyStyle.Render(empty))
 }
@@ -390,7 +438,7 @@ func (m *Model) renderSplash() string {
 		"#FECA57", // Yellow
 		"#FF9FF3", // Pink
 		"#54A0FF", // Light Blue
-		"#5F27CD", // Purple
+		"#bc8cff", // Purple
 	}
 
 	// Select frame and color based on animation frame
@@ -409,7 +457,7 @@ func (m *Model) renderSplash() string {
 	loadingText := fmt.Sprintf("Loading your Go learning experience%s", dots)
 
 	subtitleStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#A855F7")).
+		Foreground(lipgloss.Color("#d2a8ff")).
 		Italic(true).
 		Align(lipgloss.Center)
 
@@ -423,13 +471,7 @@ func (m *Model) renderSplash() string {
 🚀 Interactive Go Tutorial Platform 🚀`, logo, subtitle)
 
 	// Center and style the splash consistently with other views
-	contentWidth := m.width - 10
-	if contentWidth < 50 {
-		contentWidth = 50
-	}
-	if contentWidth > 90 {
-		contentWidth = 90
-	}
+	contentWidth := m.getContentWidth()
 
 	style := lipgloss.NewStyle().
 		Width(contentWidth).
@@ -493,26 +535,20 @@ func (m *Model) renderHint() string {
 		statusStyle.Render("Press Enter or Esc to return"))
 
 	// Apply consistent border styling
-	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#F59E0B"))
-	borderLine := borderStyle.Render(strings.Repeat("═", 80))
+	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#d29922"))
+	borderLine := borderStyle.Render(strings.Repeat("═", borderCharWidth))
 
 	borderedContent := fmt.Sprintf(`%s
 %s
 %s`, borderLine, content, borderLine)
 
-	// Center and style consistently
-	contentWidth := m.width - 10
-	if contentWidth < 50 {
-		contentWidth = 50
-	}
-	if contentWidth > 90 {
-		contentWidth = 90
-	}
+	// Style the content left-aligned
+	contentWidth := m.getContentWidth()
 
 	style := lipgloss.NewStyle().
 		Width(contentWidth).
-		Align(lipgloss.Center).
-		Padding(1, 0)
+		Align(lipgloss.Left).
+		Padding(1, 2)
 
 	return style.Render(borderedContent)
 }
@@ -687,24 +723,65 @@ func (m *Model) renderExerciseList() string {
 		rows = append(rows, row)
 	}
 
-	// Add 10% padding to each column width
+	// Add padding to each column width
 	for i := range maxWidths {
-		maxWidths[i] = int(float64(maxWidths[i]) * 1.1)
-		if maxWidths[i] < 3 { // Minimum width
-			maxWidths[i] = 3
+		maxWidths[i] = int(float64(maxWidths[i]) * columnPaddingFactor)
+		if maxWidths[i] < minColumnWidth {
+			maxWidths[i] = minColumnWidth
 		}
 	}
+
+	// Cap total table width to terminal width.
+	// NormalBorder adds: 1 left + 5 between columns + 1 right = 7 chars for borders.
+	// Each column gets 1 char padding on each side = 6 * 2 = 12 chars.
+	// Total overhead = 19 chars.
+	borderOverhead := len(maxWidths) + 1 + len(maxWidths)*2 // borders between + edges + padding
+	availableForCols := m.width - borderOverhead
+	if availableForCols < 40 {
+		availableForCols = 40
+	}
+
+	totalColWidth := 0
+	for _, w := range maxWidths {
+		totalColWidth += w
+	}
+
+	// Shrink the two widest flexible columns (name and category) if we exceed available space.
+	if totalColWidth > availableForCols {
+		excess := totalColWidth - availableForCols
+		// Shrink name (col 2) first, then category (col 3)
+		nameMax := maxWidths[2] - excess
+		if nameMax < 15 {
+			nameMax = 15
+		}
+		shrunk := maxWidths[2] - nameMax
+		maxWidths[2] = nameMax
+		excess -= shrunk
+		if excess > 0 {
+			catMax := maxWidths[3] - excess
+			if catMax < 10 {
+				catMax = 10
+			}
+			maxWidths[3] = catMax
+		}
+	}
+
+	tableWidth := 0
+	for _, w := range maxWidths {
+		tableWidth += w
+	}
+	tableWidth += borderOverhead
 
 	// Create table with dynamic column widths
 	t := table.New().
 		Border(lipgloss.NormalBorder()).
-		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#6B7280"))).
-		Width(maxWidths[0] + maxWidths[1] + maxWidths[2] + maxWidths[3] + maxWidths[4] + maxWidths[5] + 12). // Account for borders and padding
+		BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#8b949e"))).
+		Width(tableWidth).
 		StyleFunc(func(row, col int) lipgloss.Style {
 			// Header row styling
 			if row == 0 {
 				return lipgloss.NewStyle().
-					Foreground(lipgloss.Color("#D1D5DB")).
+					Foreground(lipgloss.Color("#c9d1d9")).
 					Bold(true).
 					Align(lipgloss.Center).
 					Width(maxWidths[col])
@@ -714,7 +791,7 @@ func (m *Model) renderExerciseList() string {
 			actualIndex := startIndex + row - 1
 			if actualIndex == m.listSelectedIndex {
 				return lipgloss.NewStyle().
-					Foreground(lipgloss.Color("#A855F7")).
+					Foreground(lipgloss.Color("#d2a8ff")).
 					Bold(true).
 					Width(maxWidths[col])
 			}
@@ -722,7 +799,7 @@ func (m *Model) renderExerciseList() string {
 			// Check if this row is the current exercise (highlight in green)
 			if actualIndex < len(filteredExercises) && filteredExercises[actualIndex] == m.currentExercise {
 				return lipgloss.NewStyle().
-					Foreground(lipgloss.Color("#10B981")).
+					Foreground(lipgloss.Color("#3fb950")).
 					Bold(true).
 					Width(maxWidths[col])
 			}
@@ -731,43 +808,43 @@ func (m *Model) renderExerciseList() string {
 			baseStyle := lipgloss.NewStyle().Width(maxWidths[col])
 			switch col {
 			case 0: // Selection indicator
-				return baseStyle.Foreground(lipgloss.Color("#A855F7")) // Purple
+				return baseStyle.Foreground(lipgloss.Color("#d2a8ff")) // Purple
 			case 1: // Exercise number
-				return baseStyle.Foreground(lipgloss.Color("#6B7280")) // Gray
+				return baseStyle.Foreground(lipgloss.Color("#8b949e")) // Gray
 			case 2: // Exercise name
-				return baseStyle.Foreground(lipgloss.Color("#E5E7EB")) // Light gray
+				return baseStyle.Foreground(lipgloss.Color("#c9d1d9")) // Light gray
 			case 3: // Category
-				return baseStyle.Foreground(lipgloss.Color("#60A5FA")) // Blue
+				return baseStyle.Foreground(lipgloss.Color("#58a6ff")) // Blue
 			case 4: // Difficulty
 				// Color based on difficulty level
 				if row > 0 && row-1 < len(rows) {
 					rowData := rows[row-1]
 					if strings.Contains(rowData.difficulty, "Beginner") {
-						return baseStyle.Foreground(lipgloss.Color("#10B981")) // Green
+						return baseStyle.Foreground(lipgloss.Color("#3fb950")) // Green
 					} else if strings.Contains(rowData.difficulty, "Easy") {
-						return baseStyle.Foreground(lipgloss.Color("#3B82F6")) // Blue
+						return baseStyle.Foreground(lipgloss.Color("#58a6ff")) // Blue
 					} else if strings.Contains(rowData.difficulty, "Medium") {
-						return baseStyle.Foreground(lipgloss.Color("#F59E0B")) // Orange
+						return baseStyle.Foreground(lipgloss.Color("#d29922")) // Orange
 					} else if strings.Contains(rowData.difficulty, "Hard") {
-						return baseStyle.Foreground(lipgloss.Color("#EF4444")) // Red
+						return baseStyle.Foreground(lipgloss.Color("#f85149")) // Red
 					} else {
-						return baseStyle.Foreground(lipgloss.Color("#8B5CF6")) // Purple
+						return baseStyle.Foreground(lipgloss.Color("#d2a8ff")) // Purple
 					}
 				}
-				return baseStyle.Foreground(lipgloss.Color("#F59E0B")) // Default orange
+				return baseStyle.Foreground(lipgloss.Color("#d29922")) // Default orange
 			case 5: // Status
 				// Color based on completion status
 				if row > 0 && row-1 < len(rows) {
 					rowData := rows[row-1]
 					if rowData.status == "Complete" {
-						return baseStyle.Foreground(lipgloss.Color("#10B981")) // Green
+						return baseStyle.Foreground(lipgloss.Color("#3fb950")) // Green
 					} else {
-						return baseStyle.Foreground(lipgloss.Color("#EF4444")) // Red
+						return baseStyle.Foreground(lipgloss.Color("#f85149")) // Red
 					}
 				}
-				return baseStyle.Foreground(lipgloss.Color("#EF4444")) // Default red
+				return baseStyle.Foreground(lipgloss.Color("#f85149")) // Default red
 			default:
-				return baseStyle.Foreground(lipgloss.Color("#E5E7EB")) // Light gray
+				return baseStyle.Foreground(lipgloss.Color("#c9d1d9")) // Light gray
 			}
 		})
 
@@ -790,7 +867,7 @@ func (m *Model) renderExerciseList() string {
 	if totalExercises == 0 && m.filterText != "" {
 		content.WriteString("\n")
 		noResultsMsg := lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#EF4444")).
+			Foreground(lipgloss.Color("#f85149")).
 			Italic(true).
 			Render(fmt.Sprintf("No exercises match filter '%s'", m.filterText))
 		content.WriteString(noResultsMsg)
@@ -800,7 +877,7 @@ func (m *Model) renderExerciseList() string {
 	} else if endIndex >= totalExercises && totalExercises > 0 {
 		content.WriteString("\n")
 		endIndicator := lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#6B7280")).
+			Foreground(lipgloss.Color("#8b949e")).
 			Italic(true).
 			Render("── End of exercises ──")
 		content.WriteString(endIndicator)
@@ -814,31 +891,31 @@ func (m *Model) renderExerciseList() string {
 	} else if m.filterText != "" {
 		footerText = "Navigation: ↑↓/jk=move  Enter=select  /=filter  Esc=clear filter or back"
 	} else {
-		footerText = "Navigation: ↑↓/jk=move  PgUp/PgDn=page  Home/End=jump  Enter=select  /=filter  Esc=back"
+		footerText = "Navigation: {n}j/k=move  gg/G=top/end  H/M/L=screen  Ctrl+u/d=halfpage  /=filter  r=sync  Esc=back"
 	}
 	content.WriteString(statusStyle.Render(footerText))
 
-	// Apply consistent border styling
+	// Apply consistent border styling using table width for alignment
 	listContent := content.String()
-	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#7C3AED"))
-	borderLine := borderStyle.Render(strings.Repeat("═", 80))
+	borderWidth := tableWidth
+	if borderWidth < borderCharWidth {
+		borderWidth = borderCharWidth
+	}
+	listBorderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#bc8cff"))
+	borderLine := listBorderStyle.Render(strings.Repeat("═", borderWidth))
 
 	borderedContent := fmt.Sprintf(`%s
 %s
 %s`, borderLine, listContent, borderLine)
 
-	// Center and style consistently
-	contentWidth := m.width - 10
-	if contentWidth < 50 {
-		contentWidth = 50
-	}
-	if contentWidth > 90 {
-		contentWidth = 90
+	// Use the full terminal width for the list view so the table isn't constrained
+	listWidth := m.width
+	if listWidth < minContentWidth {
+		listWidth = minContentWidth
 	}
 
 	style := lipgloss.NewStyle().
-		Width(contentWidth).
-		Align(lipgloss.Center).
+		Width(listWidth).
 		Padding(1, 0)
 
 	return style.Render(borderedContent)
@@ -847,15 +924,15 @@ func (m *Model) renderExerciseList() string {
 // getDifficultyStyle returns appropriate styling for difficulty level
 func (m *Model) getDifficultyStyle(difficulty string) lipgloss.Style {
 	if strings.Contains(difficulty, "Beginner") {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#10B981")) // Green
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("#3fb950")) // Green
 	} else if strings.Contains(difficulty, "Easy") {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#3B82F6")) // Blue
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("#58a6ff")) // Blue
 	} else if strings.Contains(difficulty, "Medium") {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#F59E0B")) // Orange
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("#d29922")) // Orange
 	} else if strings.Contains(difficulty, "Hard") {
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#EF4444")) // Red
+		return lipgloss.NewStyle().Foreground(lipgloss.Color("#f85149")) // Red
 	}
-	return lipgloss.NewStyle().Foreground(lipgloss.Color("#6B7280")) // Gray
+	return lipgloss.NewStyle().Foreground(lipgloss.Color("#8b949e")) // Gray
 }
 
 // getSimpleDifficulty extracts just the difficulty level without stars
@@ -979,8 +1056,8 @@ func (m *Model) renderOutput() string {
 				
 				// Style the output in a code block
 				outputStyle := lipgloss.NewStyle().
-					Background(lipgloss.Color("#F3F4F6")).
-					Foreground(lipgloss.Color("#1F2937")).
+					Background(lipgloss.Color("#161b22")).
+					Foreground(lipgloss.Color("#e6edf3")).
 					Padding(1, 2).
 					Width(m.width - 20) // Leave some margin
 				
@@ -1015,26 +1092,20 @@ func (m *Model) renderOutput() string {
 
 	// Apply consistent border styling
 	outputContent := content.String()
-	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#10B981"))
-	borderLine := borderStyle.Render(strings.Repeat("═", 80))
+	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#3fb950"))
+	borderLine := borderStyle.Render(strings.Repeat("═", borderCharWidth))
 
 	borderedContent := fmt.Sprintf(`%s
 %s
 %s`, borderLine, outputContent, borderLine)
 
-	// Center and style consistently
-	contentWidth := m.width - 10
-	if contentWidth < 50 {
-		contentWidth = 50
-	}
-	if contentWidth > 90 {
-		contentWidth = 90
-	}
+	// Style the content left-aligned
+	contentWidth := m.getContentWidth()
 
 	style := lipgloss.NewStyle().
 		Width(contentWidth).
-		Align(lipgloss.Center).
-		Padding(1, 0)
+		Align(lipgloss.Left).
+		Padding(1, 2)
 
 	return style.Render(borderedContent)
 }

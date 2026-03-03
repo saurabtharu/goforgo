@@ -8,7 +8,7 @@
 
 ![GoForGo](docs/preview.png)
 
-GoForGo helps you learn Go by fixing broken code exercises with real-time feedback. It features **182+ exercises** covering Go fundamentals through advanced real-world topics including **Kubernetes, big data, DevOps integration**, and comprehensive **third-party library ecosystem**, all with a beautiful terminal interface.
+GoForGo helps you learn Go by fixing broken code exercises with real-time feedback. It features **234 exercises** covering Go fundamentals through advanced real-world topics including **Kubernetes, big data, DevOps integration**, **third-party library ecosystem**, and **common Go pitfalls**, all with a beautiful terminal interface. All exercises are embedded in the binary — just `go install` and start learning.
 
 ## 🎬 Demo
 
@@ -18,7 +18,7 @@ _Experience GoForGo's elegant interface: animated splash screen, comprehensive w
 
 ## ✨ Features
 
-- 🎯 **182+ Interactive Exercises** - From basics to advanced real-world Go development
+- 🎯 **234 Interactive Exercises** - From basics to advanced real-world Go development
 - 👁️ **Real-time File Watching** - Automatic compilation and feedback as you code
 - 🎨 **Beautiful TUI** - Clean terminal interface with progress tracking
 - 📚 **Progressive Learning** - Structured curriculum with difficulty levels
@@ -31,28 +31,30 @@ _Experience GoForGo's elegant interface: animated splash screen, comprehensive w
 
 ## 🚀 Quick Start
 
-### Option 1: Install from Source (Recommended for now)
-
-```bash
-# Clone the repository
-git clone https://github.com/stonecharioteer/goforgo.git
-cd goforgo
-
-# Build and install
-just build  # or: go build -o bin/goforgo ./cmd/goforgo
-
-# Initialize exercises in your learning directory
-mkdir ~/learn-go && cd ~/learn-go
-~/path/to/goforgo/bin/goforgo init
-
-# Start learning!
-~/path/to/goforgo/bin/goforgo
-```
-
-### Option 2: Direct Go Install (Coming Soon)
+### Option 1: Go Install (Recommended)
 
 ```bash
 go install github.com/stonecharioteer/goforgo/cmd/goforgo@latest
+
+# Initialize exercises in your learning directory
+mkdir ~/learn-go && cd ~/learn-go
+goforgo init
+
+# Start learning!
+goforgo
+```
+
+All 234 exercises and solutions are embedded in the binary — no repo clone needed.
+
+### Option 2: Build from Source
+
+```bash
+git clone https://github.com/stonecharioteer/goforgo.git
+cd goforgo
+just build  # or: go build -o bin/goforgo ./cmd/goforgo
+
+mkdir ~/learn-go && cd ~/learn-go
+~/path/to/goforgo/bin/goforgo init
 ```
 
 ## 🎮 Usage
@@ -65,7 +67,7 @@ goforgo init
 
 This creates:
 
-- `exercises/` - 182+ Go exercises organized by topic
+- `exercises/` - 234 Go exercises organized by topic
 - `solutions/` - Complete reference solutions
 - `.goforgo.toml` - Your progress and preferences
 
@@ -92,16 +94,32 @@ goforgo list                   # List all exercises with progress
 goforgo list --all             # Show completed exercises too
 ```
 
+### Testing Helpers
+
+```bash
+goforgo solve 5                # Copy solution into exercise 5
+goforgo solve 3-7              # Solve exercises 3 through 7 (inclusive)
+goforgo sync                   # Re-validate all exercises, update progress
+goforgo clean                  # Remove build artifacts from exercise dirs
+```
+
+`solve` copies the reference solution over the exercise file and marks it complete — useful for quickly advancing through exercises you've already understood. `sync` re-runs every exercise and updates progress to match reality (marks passing exercises complete, unmarks failing ones).
+
+In the TUI list view, press `r` to run a sync and refresh the list in-place.
+
 ### Available Commands
 
-| Command                                 | Description                               |
-| --------------------------------------- | ----------------------------------------- |
-| `goforgo`                               | Start interactive watch mode (default)    |
-| `goforgo init`                          | Initialize exercises in current directory |
-| `goforgo run [exercise]`                | Run specific exercise or next incomplete  |
-| `goforgo hint [exercise]`               | Show progressive hints                    |
-| `goforgo list [--all] [--category=...]` | List exercises with filters               |
-| `goforgo watch`                         | Explicit watch mode with file monitoring  |
+| Command                                 | Description                                       |
+| --------------------------------------- | ------------------------------------------------- |
+| `goforgo`                               | Start interactive watch mode (default)             |
+| `goforgo init`                          | Initialize exercises in current directory           |
+| `goforgo run [exercise]`                | Run specific exercise or next incomplete            |
+| `goforgo hint [exercise]`               | Show progressive hints                              |
+| `goforgo list [--all] [--category=...]` | List exercises with filters                         |
+| `goforgo watch`                         | Explicit watch mode with file monitoring            |
+| `goforgo solve <N or X-Y>`             | Copy solutions over exercises for a range           |
+| `goforgo sync`                          | Re-validate all exercises and update progress       |
+| `goforgo clean`                         | Remove build artifacts from exercise directories    |
 
 ## 🏗️ Building from Source
 
@@ -179,7 +197,7 @@ GOOS=windows GOARCH=amd64 go build -o dist/goforgo-windows-amd64.exe ./cmd/gofor
 
 ## 📚 Exercise Categories
 
-GoForGo includes **182 exercises across 46 categories**:
+GoForGo includes **234 exercises across 57 categories**:
 
 ### Core Go Fundamentals (76 exercises)
 
@@ -246,12 +264,27 @@ GoForGo includes **182 exercises across 46 categories**:
 - **45_spark** - DataFrames, streaming, distributed computing (3 exercises)
 - **46_elasticsearch** - Indexing, searching, aggregations (3 exercises)
 
+### Common Go Pitfalls (50 exercises)
+
+- **47_code_organization** - Variable shadowing, init functions, interface design, functional options (8 exercises)
+- **48_data_types** - Numeric pitfalls, slice mechanics, nil vs empty, map behavior (6 exercises)
+- **49_control_structures** - Range copies, pointer traps, break/defer in loops (3 exercises)
+- **50_strings** - Rune iteration, trim vs suffix, string builder, memory leaks (3 exercises)
+- **51_functions_methods** - Receiver types, named results, nil receivers, defer evaluation (4 exercises)
+- **52_error_management** - Panic handling, wrapping, comparison, double handling (4 exercises)
+- **53_concurrency_foundations** - Concurrency vs parallelism, channels vs mutexes, race conditions (4 exercises)
+- **54_concurrency_practice** - Context propagation, goroutine lifecycle, channel patterns, sync primitives (5 exercises)
+- **55_standard_library** - Time, JSON, SQL, HTTP common mistakes (4 exercises)
+- **56_testing_mistakes** - Test organization, race detection, benchmarking, test utilities (4 exercises)
+- **57_optimizations** - CPU cache, memory alignment, escape analysis, inlining, containers (5 exercises)
+
 ## 🎯 Learning Path
 
 1. **🌱 Beginner** (1-76): Core Go fundamentals - syntax, variables, functions, control flow
 2. **🌿 Intermediate** (77-144): Advanced features - testing, HTTP, I/O, networking, algorithms
 3. **🌳 Advanced** (145-153): Real-world patterns - microservices, databases, gRPC
-4. **🚀 Expert** (154-182): Third-party ecosystem - frameworks, Kubernetes, big data, DevOps
+4. **🚀 Expert** (154-184): Third-party ecosystem - frameworks, Kubernetes, big data, DevOps
+5. **🔍 Pitfalls** (185-234): Common Go mistakes - code organization, concurrency, performance
 
 Each exercise includes:
 

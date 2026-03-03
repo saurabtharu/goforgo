@@ -1,0 +1,28 @@
+[exercise]
+name = "type_embedding"
+order = 7
+category = "47_code_organization"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Type Embedding"
+summary = "Fix unintended method promotion through struct embedding"
+learning_objectives = [
+  "Understand how embedding promotes methods to the outer type",
+  "Recognize when embedding exposes internal implementation details",
+  "Refactor embedding to named fields for controlled access",
+  "Design clean public APIs by limiting method exposure"
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = """Change '*Logger' embedding to a named field 'logger *Logger' in the Server struct. Then update all the places that call Logger methods directly on Server."""
+level_2 = """After adding 'logger *Logger', the Server.AddRoute and Server.Start methods need to call s.logger.Info() instead of s.Info(). Remove the lines that call server.SetLevel(), server.Reset(), and server.GetEntries()."""
+level_3 = """In NewServer, change Logger: to logger:. Update Log() to call s.logger.Info(msg). Remove the three buggy lines that call SetLevel, Reset, and GetEntries directly on server. Update AddRoute, Start, and HandleRequest to use s.logger."""
+
+[metadata]
+tags = ["embedding", "encapsulation", "method-promotion", "API-design", "100-go-mistakes"]

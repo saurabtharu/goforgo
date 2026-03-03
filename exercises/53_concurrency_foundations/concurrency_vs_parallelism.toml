@@ -1,0 +1,32 @@
+[exercise]
+name = "concurrency_vs_parallelism"
+order = 1
+category = "53_concurrency_foundations"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Concurrency vs Parallelism"
+summary = "Understand that concurrency is about structure while parallelism is about execution, and that goroutines aren't always faster"
+learning_objectives = [
+  "Distinguish concurrency (structure) from parallelism (execution)",
+  "Recognize when goroutine overhead exceeds the benefit of parallelism",
+  "Apply threshold-based strategies to avoid wasteful goroutine spawning",
+  "Measure goroutine usage to reason about performance tradeoffs",
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = "Define a const concurrencyThreshold = 4 at the top of the file."
+level_2 = "Before spawning goroutines in concurrentMergeSort, check if len(data) <= concurrencyThreshold. If so, sort sequentially."
+level_3 = """When len(data) <= concurrencyThreshold, do:
+  left := concurrentMergeSort(data[:mid])
+  right := concurrentMergeSort(data[mid:])
+  return merge(left, right)
+Skip the WaitGroup and goroutine spawning entirely for small slices."""
+
+[metadata]
+tags = ["concurrency", "parallelism", "goroutines", "performance", "100-go-mistakes"]

@@ -1,0 +1,66 @@
+[exercise]
+name = "break_defer_loops"
+order = 3
+category = "49_control_structures"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Break and Defer in Loops"
+summary = "Break only exits switch/select (not the enclosing loop), and defer in loops accumulates calls"
+learning_objectives = [
+  "Understand that break in switch/select does not break out of an enclosing for loop",
+  "Use labeled breaks or restructured control flow to exit loops from switch/select",
+  "Know that defer calls accumulate until the surrounding function returns",
+  "Avoid resource leaks by extracting loop bodies into helper functions or using explicit cleanup",
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Mistake #34: Break in Switch Inside Loop ===
+  Executing: start
+  Executing: process
+  Received quit command
+Executed commands: [start, process]
+
+=== Mistake #35: Defer Inside Loop ===
+Resource lifecycle:
+  open(db_conn)
+  use(db_conn)
+  close(db_conn)
+  open(file_handle)
+  use(file_handle)
+  close(file_handle)
+  open(cache_client)
+  use(cache_client)
+  close(cache_client)
+
+Total lifecycle events: 9"""
+timeout = "30s"
+
+[hints]
+level_1 = "For mistake #34: Go supports labeled statements. You can label the for loop and `break` to that label."
+level_2 = """For mistake #35: `defer` runs when the enclosing FUNCTION returns, not when the loop iteration ends.
+Extract the loop body into a helper function so defer runs once per call."""
+level_3 = """Fix #34: Add a label before the for loop and break to it:
+  loop:
+    for _, cmd := range commands {
+      switch cmd {
+      case "quit":
+        break loop
+      ...
+      }
+    }
+
+Fix #35: Extract loop body into a function:
+  func useResource(name string) []string {
+    log := []string{}
+    log = append(log, fmt.Sprintf("open(%s)", name))
+    defer func() { log = ... }()  // or just use explicit append
+    ...
+    return log
+  }
+Or simply don't use defer — append close right after use."""
+
+[metadata]
+tags = ["break", "defer", "loops", "labels", "resource-management", "100-go-mistakes"]

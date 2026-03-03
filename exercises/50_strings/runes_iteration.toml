@@ -1,0 +1,34 @@
+[exercise]
+name = "runes_iteration"
+order = 1
+category = "50_strings"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Runes and Iteration"
+summary = "Understand the difference between bytes and runes in Go strings"
+learning_objectives = [
+  "Learn that Go strings are byte sequences, not rune sequences",
+  "Use range loops to iterate over runes correctly",
+  "Use utf8.RuneCountInString instead of len() for character counts",
+  "Safely truncate strings at character boundaries using []rune conversion",
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = """A Go string is just a read-only slice of bytes. When you index \
+a string with s[i], you get a byte, not a character. Multi-byte UTF-8 characters \
+(like Chinese, emoji) occupy 2-4 bytes each."""
+level_2 = """Use `for i, r := range s` to iterate by rune. The range loop \
+automatically decodes UTF-8 and gives you (byte_index, rune) pairs. For rune \
+count, use utf8.RuneCountInString(s) from the unicode/utf8 package."""
+level_3 = """To truncate at rune boundaries, convert to []rune first: \
+runes := []rune(s), then slice runes[:n], and convert back with string(runes[:n]). \
+Don't forget to add \"unicode/utf8\" to your imports."""
+
+[metadata]
+tags = ["strings", "runes", "unicode", "utf8", "iteration", "100-go-mistakes"]

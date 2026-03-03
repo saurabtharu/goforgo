@@ -1,0 +1,35 @@
+[exercise]
+name = "string_conversions_leaks"
+order = 3
+category = "50_strings"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "String Conversions and Memory Leaks"
+summary = "Eliminate useless string/[]byte conversions and fix substring memory leaks"
+learning_objectives = [
+  "Identify and remove unnecessary string <-> []byte conversions",
+  "Understand that substrings share backing arrays with the original string",
+  "Use strings.Clone or string([]byte(s)) to break backing array references",
+  "Choose between strings and bytes packages based on input type",
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = """Each string <-> []byte conversion allocates a copy. If you \
+receive a string, use the strings package. If you have []byte, use the \
+bytes package. Don't bounce between them unnecessarily."""
+level_2 = """For the substring leak: s[start:end] shares the same backing \
+array as s. Use strings.Clone(sub) (Go 1.20+) or string([]byte(sub)) to \
+create an independent copy that lets the original be garbage collected."""
+level_3 = """For countVowels: work entirely with strings — use \
+strings.ToLower(s) and strings.ContainsRune(\"aeiou\", rune(ch)). \
+For extractID: after computing the substring, return strings.Clone(sub) \
+or return string([]byte(logLine[start:start+end]))."""
+
+[metadata]
+tags = ["strings", "bytes", "memory-leak", "garbage-collection", "conversions", "100-go-mistakes"]

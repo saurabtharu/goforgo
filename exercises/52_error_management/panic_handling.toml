@@ -1,0 +1,42 @@
+[exercise]
+name = "panic_handling"
+category = "52_error_management"
+order = 1
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Panic Handling"
+summary = "Refactor code that misuses panic for normal errors into proper error returns"
+learning_objectives = [
+  "Understand when panic is appropriate (programmer errors) vs when to return errors (expected failures)",
+  "Refactor panic-based error handling to idiomatic Go error returns",
+  "Use recover() only for catching programming errors or protecting goroutines",
+  "Recognize the 'must' prefix convention for functions that panic on misuse",
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Panic Handling ===
+--- Config Parsing ---
+Error (expected): empty config data
+Config: map[app:myapp]
+--- Age Parsing ---
+Error (expected): invalid age "abc": strconv.Atoi: parsing "abc": invalid syntax
+Error (expected): age -5 out of valid range [0, 150]
+Valid age: 25
+--- Template Compilation ---
+Caught programming error: template "header" must not be nil
+Template: [compiled: <h1>Hello</h1>]"""
+timeout = "30s"
+
+[hints]
+level_1 = """Panic is for programmer errors (nil where nil is impossible, broken invariants).
+Normal failures like bad input, missing files, or network errors should return error."""
+level_2 = """Change function signatures to return errors: func parseConfig(data string) (map[string]string, error).
+Then handle the errors in main() with if err != nil { ... }."""
+level_3 = """Keep mustCompileTemplate's panic — nil template is a programmer bug.
+Wrap it in a recover() to demonstrate catching programming errors gracefully."""
+
+[metadata]
+tags = ["panic", "recover", "error-handling", "100-go-mistakes"]

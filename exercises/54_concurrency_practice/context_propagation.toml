@@ -1,0 +1,29 @@
+[exercise]
+name = "context_propagation"
+order = 1
+category = "54_concurrency_practice"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Context Propagation"
+summary = "Learn why passing request contexts to background goroutines causes subtle bugs"
+learning_objectives = [
+  "Understand that request contexts are canceled when handlers return",
+  "Create detached contexts for background work",
+  "Apply appropriate timeouts to background operations",
+  "Distinguish between request-scoped and application-scoped work"
+]
+
+[validation]
+mode = "run"
+timeout = "30s"
+
+[hints]
+level_1 = "The request context is canceled when the handler returns - background work shouldn't use it"
+level_2 = "Use context.Background() to create a new context that isn't tied to the request lifecycle"
+level_3 = "Create a detached context with its own timeout: bgCtx, bgCancel := context.WithTimeout(context.Background(), 500*time.Millisecond)"
+
+[metadata]
+tags = ["concurrency", "context", "goroutines", "100-go-mistakes", "mistake-61"]
+related_exercises = ["11_concurrency/context_usage.go"]

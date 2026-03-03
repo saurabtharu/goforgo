@@ -1,0 +1,49 @@
+[exercise]
+name = "range_pointers"
+order = 2
+category = "49_control_structures"
+difficulty = 3
+estimated_time = "15m"
+
+[description]
+title = "Range Pointers"
+summary = "Pointer-to-copy semantics in range loops and non-deterministic map iteration"
+learning_objectives = [
+  "Understand that range variables are copies — pointers to them don't reference the original slice",
+  "Learn to use index-based access for pointers to actual slice elements",
+  "Know that map iteration order is non-deterministic in Go",
+  "Use sorted keys for deterministic map traversal",
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Mistake #32: Pointers to Range Copies ===
+After bonus (via original slice):
+  Alice: 90
+  Bob: 72
+  Charlie: 96
+
+=== Mistake #33: Map Iteration Order ===
+Scores (sorted by name):
+  Alice: 90
+  Bob: 85
+  Charlie: 95
+  Diana: 88
+
+All tests passed!"""
+timeout = "30s"
+
+[hints]
+level_1 = "For mistake #32: `&s` gives a pointer to a copy of the element, not to the original in the slice. Modifications through that pointer won't affect `students`."
+level_2 = "Use `for i := range students` and then take `&students[i]` to get a pointer to the actual slice element."
+level_3 = """Fix #32: Replace `for _, s := range students { passing = append(passing, &s) }` with:
+  for i := range students { if students[i].Grade >= 80 { passing = append(passing, &students[i]) } }
+
+Fix #33: Extract keys into a slice, sort it, then iterate:
+  keys := make([]string, 0, len(scores))
+  for k := range scores { keys = append(keys, k) }
+  sort.Strings(keys)
+  for _, k := range keys { fmt.Printf("  %s: %d\\n", k, scores[k]) }"""
+
+[metadata]
+tags = ["range", "pointers", "map-iteration", "sort", "100-go-mistakes"]

@@ -1,0 +1,41 @@
+[exercise]
+name = "error_comparison"
+category = "52_error_management"
+order = 3
+difficulty = 4
+estimated_time = "20m"
+
+[description]
+title = "Error Comparison"
+summary = "Fix code that uses type assertions and == to check wrapped errors, replacing with errors.As and errors.Is"
+learning_objectives = [
+  "Understand why type assertions fail on wrapped errors",
+  "Understand why == comparison fails on wrapped sentinel errors",
+  "Use errors.As to extract error types through the wrapping chain",
+  "Use errors.Is to check sentinel errors through the wrapping chain",
+]
+
+[validation]
+mode = "run"
+expected_output = """=== Error Comparison ===
+--- Fix #50: errors.As Unwraps the Chain ---
+Validation error: field="age" msg="must be between 0 and 150"
+Not found: user id=99
+
+--- Fix #51: errors.Is Unwraps the Chain ---
+Permission denied - access rejected
+Rate limited - will retry"""
+timeout = "30s"
+
+[hints]
+level_1 = """errors.As(err, &target) walks the error chain and fills target if it finds a matching type.
+errors.Is(err, target) walks the chain looking for a matching sentinel value."""
+level_2 = """For errors.As, declare a variable of the target type first:
+  var ve *ValidationError
+  if errors.As(err, &ve) { /* use ve */ }"""
+level_3 = """For errors.Is, just replace == with the function call:
+  if errors.Is(err, ErrPermission) { /* handle it */ }
+Both functions unwrap through any number of fmt.Errorf %w layers."""
+
+[metadata]
+tags = ["errors-is", "errors-as", "type-assertion", "error-comparison", "100-go-mistakes"]
