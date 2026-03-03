@@ -26,16 +26,6 @@ func createExerciseStructure(baseDir string) error {
 	dirs := []string{
 		"exercises",
 		"solutions",
-		"exercises/01_basics",
-		"exercises/02_variables",
-		"exercises/03_functions",
-		"exercises/04_control_flow",
-		"exercises/05_data_structures",
-		"solutions/01_basics",
-		"solutions/02_variables",
-		"solutions/03_functions",
-		"solutions/04_control_flow",
-		"solutions/05_data_structures",
 	}
 
 	for _, dir := range dirs {
