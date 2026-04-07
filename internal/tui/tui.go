@@ -11,8 +11,16 @@ import (
 
 // RunTUI starts the Bubble Tea TUI application
 func RunTUI(exerciseManager *exercise.ExerciseManager, runner *runner.Runner) error {
+	return RunTUIWithNotice(exerciseManager, runner, "")
+}
+
+// RunTUIWithNotice starts the Bubble Tea TUI application with an optional startup notice.
+func RunTUIWithNotice(exerciseManager *exercise.ExerciseManager, runner *runner.Runner, notice string) error {
 	// Create the model
 	model := NewModel(exerciseManager, runner)
+	if notice != "" {
+		model.SetUpdateNotice(notice)
+	}
 
 	// Create the program with options
 	p := tea.NewProgram(
@@ -46,6 +54,11 @@ func RunTUI(exerciseManager *exercise.ExerciseManager, runner *runner.Runner) er
 
 // CheckAndInitializeTUI checks if we should run the TUI and initializes it
 func CheckAndInitializeTUI(basePath string) error {
+	return CheckAndInitializeTUIWithNotice(basePath, "")
+}
+
+// CheckAndInitializeTUIWithNotice checks if we should run the TUI and initializes it with an optional notice.
+func CheckAndInitializeTUIWithNotice(basePath, notice string) error {
 	// Check if we're in a terminal
 	if !isTerminal() {
 		return fmt.Errorf("GoForGo requires a terminal to run the interactive interface")
@@ -61,7 +74,7 @@ func CheckAndInitializeTUI(basePath string) error {
 	r := runner.NewRunner(basePath)
 
 	// Start the TUI
-	return RunTUI(em, r)
+	return RunTUIWithNotice(em, r, notice)
 }
 
 // isTerminal checks if we're running in a terminal
