@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-04-07
+
 ### Fixed
 - **Memory creep in watch mode** *(2026-04-07 11:15:00 local)*: eliminated duplicate in-flight file watcher wait commands in TUI to prevent goroutine buildup during long sessions.
 - **Watcher shutdown race** *(2026-04-07 11:15:00 local)*: reworked watcher lifecycle with coordinated shutdown (`done` channel + `WaitGroup` + `sync.Once`) to avoid send-on-closed-channel/data-race behavior.
