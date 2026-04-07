@@ -16,7 +16,7 @@ import (
 type ViewMode int
 
 const (
-	ViewSplash  ViewMode = iota
+	ViewSplash ViewMode = iota
 	ViewWelcome
 	ViewMain
 	ViewList
@@ -33,10 +33,10 @@ type Model struct {
 	exercises       []*exercise.Exercise
 
 	// Execution and validation
-	runner        *runner.Runner
-	lastResult    *runner.Result
-	isRunning     bool
-	currentHintLevel int  // Track current hint level (0=none, 1=level1, 2=level1+2, 3=all)
+	runner           *runner.Runner
+	lastResult       *runner.Result
+	isRunning        bool
+	currentHintLevel int // Track current hint level (0=none, 1=level1, 2=level1+2, 3=all)
 
 	// File watching
 	watcher          *watcher.Watcher
@@ -48,23 +48,23 @@ type Model struct {
 	width    int
 	height   int
 	ready    bool
-	
+
 	// List view state for scrollable exercise list
 	listSelectedIndex int // Currently selected item in list
 	listScrollOffset  int // Scroll offset for list view
 	listViewHeight    int // Available height for list items
-	
+
 	// Filter state
 	filterMode bool   // Whether we're in filter mode
 	filterText string // Current filter text
-	
+
 	// Output view state
-	outputScrollPos  int  // Current scroll position in output view
-	outputViewHeight int  // Available height for output content
-	
+	outputScrollPos  int // Current scroll position in output view
+	outputViewHeight int // Available height for output content
+
 	// Progress and statistics
 	// Counts are now calculated dynamically via exerciseManager methods
-	
+
 	// Vim-style key sequence state
 	pendingKey   string // Buffered key for multi-key sequences (e.g., "g", "z")
 	pendingCount int    // Numeric prefix for {count}j/{count}k motions
@@ -75,6 +75,7 @@ type Model struct {
 
 	// Messages and status
 	statusMessage string
+	updateNotice  string
 	splashFrame   int
 }
 
@@ -83,7 +84,7 @@ func NewModel(exerciseManager *exercise.ExerciseManager, runner *runner.Runner) 
 	exercises := exerciseManager.GetExercises()
 	currentEx := exerciseManager.GetNextExercise()
 	currentIndex := 0
-	
+
 	// Find the index of the current exercise
 	for i, ex := range exercises {
 		if currentEx != nil && ex.Info.Name == currentEx.Info.Name {
@@ -103,6 +104,11 @@ func NewModel(exerciseManager *exercise.ExerciseManager, runner *runner.Runner) 
 		viewMode:        ViewSplash,
 		splashFrame:     0,
 	}
+}
+
+// SetUpdateNotice sets a startup update notice shown in the UI footer.
+func (m *Model) SetUpdateNotice(notice string) {
+	m.updateNotice = notice
 }
 
 // Init initializes the model
@@ -618,7 +624,7 @@ func (m *Model) nextExercise() tea.Cmd {
 	if m.currentIndex < len(m.exercises)-1 {
 		m.currentIndex++
 		m.currentExercise = m.exercises[m.currentIndex]
-		m.currentHintLevel = 0  // Reset hint level for new exercise
+		m.currentHintLevel = 0 // Reset hint level for new exercise
 		return m.runCurrentExercise()
 	}
 	return func() tea.Msg {
@@ -630,7 +636,7 @@ func (m *Model) previousExercise() tea.Cmd {
 	if m.currentIndex > 0 {
 		m.currentIndex--
 		m.currentExercise = m.exercises[m.currentIndex]
-		m.currentHintLevel = 0  // Reset hint level for new exercise
+		m.currentHintLevel = 0 // Reset hint level for new exercise
 		return m.runCurrentExercise()
 	}
 	return func() tea.Msg {
@@ -729,39 +735,39 @@ func (m *Model) consumeCount(defaultVal int) int {
 // Styles — GitHub Dark theme palette for readability on dark terminals.
 var (
 	headerStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#bc8cff")).
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderBottom(true).
-		BorderForeground(lipgloss.Color("#bc8cff"))
+			Bold(true).
+			Foreground(lipgloss.Color("#bc8cff")).
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderBottom(true).
+			BorderForeground(lipgloss.Color("#bc8cff"))
 
 	titleStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#e6edf3"))
+			Bold(true).
+			Foreground(lipgloss.Color("#e6edf3"))
 
 	successStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#3fb950")).
-		Bold(true)
+			Foreground(lipgloss.Color("#3fb950")).
+			Bold(true)
 
 	errorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#f85149")).
-		Bold(true)
+			Foreground(lipgloss.Color("#f85149")).
+			Bold(true)
 
 	hintStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#d29922")).
-		Italic(true)
+			Foreground(lipgloss.Color("#d29922")).
+			Italic(true)
 
 	codeStyle = lipgloss.NewStyle().
-		Background(lipgloss.Color("#161b22")).
-		Foreground(lipgloss.Color("#e6edf3")).
-		Padding(0, 1)
+			Background(lipgloss.Color("#161b22")).
+			Foreground(lipgloss.Color("#e6edf3")).
+			Padding(0, 1)
 
 	progressBarStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#bc8cff"))
+				Foreground(lipgloss.Color("#bc8cff"))
 
 	statusStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#8b949e")).
-		Italic(true)
+			Foreground(lipgloss.Color("#8b949e")).
+			Italic(true)
 )
 
 // getTotalCount returns the total number of exercises (dynamic)
@@ -779,7 +785,7 @@ func (m *Model) getMaxHintLevel() int {
 	if m.currentExercise == nil {
 		return 0
 	}
-	
+
 	maxLevel := 0
 	if m.currentExercise.Hints.Level1 != "" {
 		maxLevel = 1
@@ -790,7 +796,7 @@ func (m *Model) getMaxHintLevel() int {
 	if m.currentExercise.Hints.Level3 != "" {
 		maxLevel = 3
 	}
-	
+
 	return maxLevel
 }
 
@@ -812,17 +818,17 @@ func (m *Model) splashTick() tea.Cmd {
 func (m *Model) moveListSelection(delta int) tea.Cmd {
 	filteredExercises := m.getFilteredExercises()
 	newIndex := m.listSelectedIndex + delta
-	
+
 	// Clamp to valid range (no wrapping)
 	if newIndex < 0 {
 		newIndex = 0
 	} else if newIndex >= len(filteredExercises) {
 		newIndex = len(filteredExercises) - 1
 	}
-	
+
 	m.listSelectedIndex = newIndex
 	m.ensureSelectedVisible()
-	
+
 	return nil
 }
 
@@ -836,7 +842,7 @@ func (m *Model) ensureSelectedVisible() {
 		// Selected item is below visible area
 		m.listScrollOffset = m.listSelectedIndex - m.listViewHeight + 1
 	}
-	
+
 	// Ensure scroll offset doesn't go negative or exceed filtered exercise count
 	if m.listScrollOffset < 0 {
 		m.listScrollOffset = 0
@@ -851,29 +857,29 @@ func (m *Model) getFilteredExercises() []*exercise.Exercise {
 	if m.filterText == "" {
 		return m.exercises
 	}
-	
+
 	var filtered []*exercise.Exercise
 	filterLower := strings.ToLower(m.filterText)
-	
+
 	for _, ex := range m.exercises {
 		// Check exercise name
 		if strings.Contains(strings.ToLower(ex.Info.Name), filterLower) {
 			filtered = append(filtered, ex)
 			continue
 		}
-		
+
 		// Check exercise title
 		if strings.Contains(strings.ToLower(ex.Description.Title), filterLower) {
 			filtered = append(filtered, ex)
 			continue
 		}
-		
+
 		// Check category
 		if strings.Contains(strings.ToLower(ex.Info.Category), filterLower) {
 			filtered = append(filtered, ex)
 			continue
 		}
-		
+
 		// Check difficulty
 		difficulty := ex.GetDifficultyString()
 		if strings.Contains(strings.ToLower(difficulty), filterLower) {
@@ -881,7 +887,7 @@ func (m *Model) getFilteredExercises() []*exercise.Exercise {
 			continue
 		}
 	}
-	
+
 	return filtered
 }
 
@@ -890,20 +896,20 @@ func (m *Model) scrollOutput(delta int) tea.Cmd {
 	if m.lastResult == nil {
 		return nil
 	}
-	
+
 	// Split output into lines for scrolling
 	outputLines := strings.Split(m.lastResult.Output, "\n")
 	maxScroll := max(0, len(outputLines)-m.outputViewHeight)
-	
+
 	m.outputScrollPos += delta
-	
+
 	// Clamp scroll position
 	if m.outputScrollPos < 0 {
 		m.outputScrollPos = 0
 	} else if m.outputScrollPos > maxScroll {
 		m.outputScrollPos = maxScroll
 	}
-	
+
 	return nil
 }
 
@@ -939,10 +945,10 @@ func (m *Model) scrollToBottom() tea.Cmd {
 	if m.lastResult == nil {
 		return nil
 	}
-	
+
 	outputLines := strings.Split(m.lastResult.Output, "\n")
 	maxScroll := max(0, len(outputLines)-m.outputViewHeight)
 	m.outputScrollPos = maxScroll
-	
+
 	return nil
 }

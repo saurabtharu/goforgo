@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -17,6 +18,11 @@ const (
 )
 
 var defaultTagsURLForTests = "https://api.github.com/repos/stonecharioteer/goforgo/tags?per_page=1"
+
+var (
+	updateNoticeMu sync.RWMutex
+	updateNotice   string
+)
 
 type githubTag struct {
 	Name string `json:"name"`
@@ -33,17 +39,37 @@ func maybeNotifyUpdate(w io.Writer, currentVersion string) {
 }
 
 func maybeNotifyUpdateWithConfig(w io.Writer, currentVersion string, client *http.Client, tagsURL string) {
+	latest, isNewer, err := checkForUpdate(currentVersion, tagsURL, client)
+	if err != nil || !isNewer {
+		setUpdateNotice("")
+		return
+	}
+
+	setUpdateNotice(compactUpdateNotice(latest, currentVersion))
 	if w == nil {
 		return
 	}
+	fmt.Fprint(w, cliUpdateNotice(latest, currentVersion))
+}
 
-	latest, isNewer, err := checkForUpdate(currentVersion, tagsURL, client)
-	if err != nil || !isNewer {
-		return
-	}
+func getCachedUpdateNotice() string {
+	updateNoticeMu.RLock()
+	defer updateNoticeMu.RUnlock()
+	return updateNotice
+}
 
-	fmt.Fprintf(w, "\n🔔 Update available: %s (current: %s)\n", latest, currentVersion)
-	fmt.Fprintf(w, "   Update with: %s\n\n", updateInstallCmd)
+func setUpdateNotice(notice string) {
+	updateNoticeMu.Lock()
+	defer updateNoticeMu.Unlock()
+	updateNotice = notice
+}
+
+func cliUpdateNotice(latest, current string) string {
+	return fmt.Sprintf("\n🔔 Update available: %s (current: %s)\n   Update with: %s\n\n", latest, current, updateInstallCmd)
+}
+
+func compactUpdateNotice(latest, current string) string {
+	return fmt.Sprintf("Update available: %s (current: %s) • %s", latest, current, updateInstallCmd)
 }
 
 func checkForUpdate(currentVersion, tagsURL string, client *http.Client) (latest string, isNewer bool, err error) {

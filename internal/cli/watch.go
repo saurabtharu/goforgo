@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/stonecharioteer/goforgo/internal/tui"
@@ -50,16 +51,15 @@ func startWatchMode(cmd *cobra.Command, args []string) error {
 	}
 
 	// Start the TUI interface (like Rustlings)
-	return tui.CheckAndInitializeTUI(cwd)
+	return tui.CheckAndInitializeTUIWithNotice(cwd, strings.TrimSpace(getCachedUpdateNotice()))
 }
-
 
 func init() {
 	rootCmd.AddCommand(watchCmd)
-	
+
 	// Add flags
 	watchCmd.Flags().BoolVar(&manualRun, "manual", false, "Disable file watching, require manual execution")
-	
+
 	// Make watch the default command when no subcommand is specified
 	rootCmd.RunE = startWatchMode
 }

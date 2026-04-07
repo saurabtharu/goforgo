@@ -376,6 +376,10 @@ func (m *Model) renderFooter() string {
 		footer += "\n" + errorStyle.Render("⚠️  File watcher error: "+m.watcherErr.Error())
 	}
 
+	if m.updateNotice != "" {
+		footer += "\n" + hintStyle.Render("🔔 "+m.updateNotice)
+	}
+
 	return footer
 }
 
@@ -580,7 +584,7 @@ func (m *Model) renderExerciseList() string {
 
 	// Get filtered exercises
 	filteredExercises := m.getFilteredExercises()
-	
+
 	// Calculate list dimensions
 	listHeight := m.listViewHeight
 	totalExercises := len(filteredExercises)
@@ -590,7 +594,7 @@ func (m *Model) renderExerciseList() string {
 	// Progress indicator
 	var progressText string
 	if m.filterText != "" {
-		progressText = fmt.Sprintf("Showing %d-%d of %d filtered exercises (total: %d)", 
+		progressText = fmt.Sprintf("Showing %d-%d of %d filtered exercises (total: %d)",
 			startIndex+1, endIndex, totalExercises, len(m.exercises))
 	} else {
 		progressText = fmt.Sprintf("Exercises %d-%d of %d", startIndex+1, endIndex, totalExercises)
@@ -1038,43 +1042,43 @@ func (m *Model) renderOutput() string {
 		if m.lastResult.Output != "" {
 			outputLines := strings.Split(m.lastResult.Output, "\n")
 			totalLines := len(outputLines)
-			
+
 			// Calculate visible range
 			startLine := m.outputScrollPos
 			endLine := min(startLine+m.outputViewHeight, totalLines)
-			
+
 			// Show scroll position info
-			scrollInfo := fmt.Sprintf("Output (lines %d-%d of %d)", 
+			scrollInfo := fmt.Sprintf("Output (lines %d-%d of %d)",
 				startLine+1, endLine, totalLines)
 			content.WriteString(statusStyle.Render(scrollInfo))
 			content.WriteString("\n\n")
-			
+
 			// Show visible output lines
 			if startLine < totalLines {
 				visibleLines := outputLines[startLine:endLine]
 				outputContent := strings.Join(visibleLines, "\n")
-				
+
 				// Style the output in a code block
 				outputStyle := lipgloss.NewStyle().
 					Background(lipgloss.Color("#161b22")).
 					Foreground(lipgloss.Color("#e6edf3")).
 					Padding(1, 2).
 					Width(m.width - 20) // Leave some margin
-				
+
 				content.WriteString(outputStyle.Render(outputContent))
 			}
 		} else {
 			content.WriteString(statusStyle.Render("No output produced by the exercise."))
 		}
-		
+
 		content.WriteString("\n\n")
-		
+
 		// Scroll indicators
 		if m.lastResult.Output != "" {
 			outputLines := strings.Split(m.lastResult.Output, "\n")
 			totalLines := len(outputLines)
 			maxScroll := max(0, totalLines-m.outputViewHeight)
-			
+
 			if m.outputScrollPos > 0 {
 				content.WriteString(statusStyle.Render("↑ More content above (scroll up)"))
 				content.WriteString("\n")
@@ -1084,7 +1088,7 @@ func (m *Model) renderOutput() string {
 				content.WriteString("\n")
 			}
 		}
-		
+
 		// Footer with controls
 		footerText := "Navigation: ↑↓/jk=scroll  PgUp/PgDn=page  Home/End=jump  Esc=back"
 		content.WriteString(statusStyle.Render(footerText))
@@ -1124,4 +1128,3 @@ func min(a, b int) int {
 	}
 	return b
 }
-

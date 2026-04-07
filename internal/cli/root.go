@@ -31,7 +31,7 @@ Similar to Rustlings for Rust, GoForGo helps you learn Go by fixing broken
 code exercises, with automatic compilation and testing to guide your progress.`,
 	Version: fmt.Sprintf("%s (commit: %s, built: %s)", version, commit, date),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if noUpdateCheck {
+		if noUpdateCheck || cmd.Name() == "self-update" {
 			return
 		}
 		maybeNotifyUpdate(cmd.ErrOrStderr(), version)
