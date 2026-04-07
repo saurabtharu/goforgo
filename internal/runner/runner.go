@@ -44,6 +44,50 @@ type Runner struct {
 	timeout    time.Duration
 }
 
+const maxCommandOutputBytes = 512 * 1024 // 512KB per stream
+
+type cappedOutputBuffer struct {
+	buf     bytes.Buffer
+	max     int
+	dropped int
+}
+
+func newCappedOutputBuffer(max int) *cappedOutputBuffer {
+	return &cappedOutputBuffer{max: max}
+}
+
+func (b *cappedOutputBuffer) Write(p []byte) (int, error) {
+	if b.max <= 0 {
+		b.dropped += len(p)
+		return len(p), nil
+	}
+
+	remaining := b.max - b.buf.Len()
+	if remaining > 0 {
+		toWrite := len(p)
+		if toWrite > remaining {
+			toWrite = remaining
+		}
+		if toWrite > 0 {
+			_, _ = b.buf.Write(p[:toWrite])
+		}
+		if toWrite < len(p) {
+			b.dropped += len(p) - toWrite
+		}
+		return len(p), nil
+	}
+
+	b.dropped += len(p)
+	return len(p), nil
+}
+
+func (b *cappedOutputBuffer) String() string {
+	if b.dropped == 0 {
+		return b.buf.String()
+	}
+	return fmt.Sprintf("%s\n...[output truncated, %d bytes omitted]", b.buf.String(), b.dropped)
+}
+
 // NewRunner creates a new runner with the specified working directory
 func NewRunner(workingDir string) *Runner {
 	return &Runner{
@@ -214,10 +258,11 @@ func (r *Runner) runGoCommand(dir, command string, args ...string) (success bool
 	cmd := exec.CommandContext(ctx, "go", cmdArgs...)
 	cmd.Dir = dir
 
-	// Capture both stdout and stderr
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	// Capture both stdout and stderr with bounded buffers to avoid memory blowups.
+	stdout := newCappedOutputBuffer(maxCommandOutputBytes)
+	stderr := newCappedOutputBuffer(maxCommandOutputBytes)
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
 
 	// Run the command
 	err = cmd.Run()

@@ -105,6 +105,9 @@ func (em *ExerciseManager) LoadExercises() error {
 		return fmt.Errorf("exercises directory not found at %s. Run 'goforgo init' first", em.ExercisesPath)
 	}
 
+	// Reset in-memory list before reloading to avoid duplicate growth on repeated calls.
+	em.exercises = em.exercises[:0]
+
 	// Walk through the exercises directory
 	err := filepath.Walk(em.ExercisesPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
