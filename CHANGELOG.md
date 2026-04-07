@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-04-07
+
 ### Added
 - **Version update check via GitHub tags** *(2026-04-07 11:35:00 local)*: CLI now checks the latest repository tag at startup and shows a non-blocking update notice when a newer semantic version is available, including a `go install ...@latest` command.
 - **Update-check opt-out flag** *(2026-04-07 11:35:00 local)*: Added `--no-update-check` global flag to skip network version checks.
