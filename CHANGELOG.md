@@ -5,6 +5,17 @@ All notable changes to GoForGo will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.9.1] - 2026-04-07
+
+### Fixed
+- **Memory creep in watch mode** *(2026-04-07 11:15:00 local)*: eliminated duplicate in-flight file watcher wait commands in TUI to prevent goroutine buildup during long sessions.
+- **Watcher shutdown race** *(2026-04-07 11:15:00 local)*: reworked watcher lifecycle with coordinated shutdown (`done` channel + `WaitGroup` + `sync.Once`) to avoid send-on-closed-channel/data-race behavior.
+- **Exercise reload growth** *(2026-04-07 11:15:00 local)*: `ExerciseManager.LoadExercises()` now clears the in-memory slice before rescanning to prevent duplicate accumulation.
+- **Runner output memory pressure** *(2026-04-07 11:15:00 local)*: capped stdout/stderr capture buffers with truncation notices to prevent unbounded output allocations.
+- **Validation concurrency safety** *(2026-04-07 11:15:00 local)*: protected shared validation maps in orchestrator parallel paths to avoid concurrent write races.
+
 ## [0.9.0] - 2026-03-03
 
 ### Added

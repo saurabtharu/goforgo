@@ -115,6 +115,7 @@ func (to *TestOrchestrator) ValidateExercise(ctx context.Context, ex *exercise.E
 // startServices starts all required services and waits for them to be ready
 func (to *TestOrchestrator) startServices(ctx context.Context, request *ValidationRequest, result *ValidationResult) error {
 	var wg sync.WaitGroup
+	var mu sync.Mutex
 	serviceErrors := make(chan error, len(request.Services))
 	
 	for _, serviceSpec := range request.Services {
@@ -134,7 +135,9 @@ func (to *TestOrchestrator) startServices(ctx context.Context, request *Validati
 			if err != nil {
 				serviceResult.Error = fmt.Sprintf("Failed to create service: %v", err)
 				serviceResult.Duration = time.Since(serviceStart)
+				mu.Lock()
 				result.ServiceResults[spec.Name] = serviceResult
+				mu.Unlock()
 				serviceErrors <- err
 				return
 			}
@@ -142,7 +145,9 @@ func (to *TestOrchestrator) startServices(ctx context.Context, request *Validati
 			if err := service.Start(ctx); err != nil {
 				serviceResult.Error = fmt.Sprintf("Failed to start service: %v", err)
 				serviceResult.Duration = time.Since(serviceStart)
+				mu.Lock()
 				result.ServiceResults[spec.Name] = serviceResult
+				mu.Unlock()
 				serviceErrors <- err
 				return
 			}
@@ -154,7 +159,9 @@ func (to *TestOrchestrator) startServices(ctx context.Context, request *Validati
 			if err != nil {
 				serviceResult.Error = fmt.Sprintf("Failed to check service readiness: %v", err)
 				serviceResult.Duration = time.Since(serviceStart)
+				mu.Lock()
 				result.ServiceResults[spec.Name] = serviceResult
+				mu.Unlock()
 				serviceErrors <- err
 				return
 			}
@@ -163,7 +170,9 @@ func (to *TestOrchestrator) startServices(ctx context.Context, request *Validati
 			if !ready {
 				serviceResult.Error = "Service did not become ready within timeout"
 				serviceResult.Duration = time.Since(serviceStart)
+				mu.Lock()
 				result.ServiceResults[spec.Name] = serviceResult
+				mu.Unlock()
 				serviceErrors <- fmt.Errorf("service %s not ready", spec.Name)
 				return
 			}
@@ -172,10 +181,11 @@ func (to *TestOrchestrator) startServices(ctx context.Context, request *Validati
 			connInfo := service.GetConnectionInfo()
 			serviceResult.Connection = connInfo
 			serviceResult.Duration = time.Since(serviceStart)
+			mu.Lock()
 			result.ServiceResults[spec.Name] = serviceResult
-			
 			// Add connection info to environment
 			to.injectServiceEnvironment(spec.Name, connInfo, result.Environment)
+			mu.Unlock()
 			
 			log.Printf("  ✅ Service %s ready in %v", spec.Name, serviceResult.Duration)
 		}(serviceSpec)
@@ -227,6 +237,7 @@ func (to *TestOrchestrator) buildDependencyGraph(rules []ValidationRuleSpec) [][
 // executeBatch executes a batch of validation rules that can run in parallel
 func (to *TestOrchestrator) executeBatch(ctx context.Context, batch []ValidationRuleSpec, request *ValidationRequest, result *ValidationResult) error {
 	var wg sync.WaitGroup
+	var mu sync.Mutex
 	ruleErrors := make(chan error, len(batch))
 	
 	for _, ruleSpec := range batch {
@@ -239,12 +250,14 @@ func (to *TestOrchestrator) executeBatch(ctx context.Context, batch []Validation
 			validator, exists := to.validatorRegistry.Get(spec.Type)
 			if !exists {
 				err := fmt.Errorf("unknown validation rule type: %s", spec.Type)
+				mu.Lock()
 				result.ValidationResults[spec.Name] = &RuleResult{
 					RuleName: spec.Name,
 					RuleType: spec.Type,
 					Passed:   false,
 					Error:    err.Error(),
 				}
+				mu.Unlock()
 				ruleErrors <- err
 				return
 			}
@@ -268,7 +281,9 @@ func (to *TestOrchestrator) executeBatch(ctx context.Context, batch []Validation
 				}
 			}
 			
+			mu.Lock()
 			result.ValidationResults[spec.Name] = ruleResult
+			mu.Unlock()
 			
 			if ruleResult.Passed {
 				log.Printf("  ✅ Rule %s passed in %v", spec.Name, ruleResult.Duration)

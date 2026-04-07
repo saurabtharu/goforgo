@@ -39,8 +39,9 @@ type Model struct {
 	currentHintLevel int  // Track current hint level (0=none, 1=level1, 2=level1+2, 3=all)
 
 	// File watching
-	watcher    *watcher.Watcher
-	watcherErr error
+	watcher          *watcher.Watcher
+	watcherErr       error
+	watcherListening bool
 
 	// UI state
 	viewMode ViewMode
@@ -144,10 +145,10 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Auto-advance: show success screen then move to next exercise
 		if msg.result.Success && m.autoAdvance && m.currentIndex < len(m.exercises)-1 {
 			m.showingSuccess = true
-			return m, tea.Batch(m.waitForFileChange(m.watcher), m.autoAdvanceTick())
+			return m, tea.Batch(m.autoAdvanceTick(), m.armFileWatcher())
 		}
 
-		return m, m.waitForFileChange(m.watcher)
+		return m, m.armFileWatcher()
 
 	case exerciseRunningMsg:
 		m.isRunning = true
@@ -155,21 +156,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case fileChangedMsg:
+		m.watcherListening = false
 		if !m.isRunning {
-			return m, m.runCurrentExercise()
+			return m, tea.Batch(m.runCurrentExercise(), m.armFileWatcher())
 		}
-		return m, nil
+		return m, m.armFileWatcher()
 
 	case watcherErrorMsg:
+		m.watcherListening = false
 		m.watcherErr = msg.err
 		return m, nil
 
 	case continueWatchingMsg:
+		m.watcherListening = false
 		// Continue listening for file changes
-		if m.watcher != nil {
-			return m, m.waitForFileChange(m.watcher)
-		}
-		return m, nil
+		return m, m.armFileWatcher()
 
 	case autoAdvanceMsg:
 		if m.showingSuccess {
@@ -656,19 +657,41 @@ func (m *Model) startFileWatcher() tea.Cmd {
 	}
 
 	// Start watching for file changes
-	return m.waitForFileChange(w)
+	return m.armFileWatcher()
+}
+
+func (m *Model) armFileWatcher() tea.Cmd {
+	if m.watcher == nil {
+		// Keep command semantics predictable for update paths before Init() wires the watcher.
+		return func() tea.Msg { return nil }
+	}
+	if m.watcherListening {
+		return nil
+	}
+	m.watcherListening = true
+	return m.waitForFileChange(m.watcher)
 }
 
 func (m *Model) waitForFileChange(w *watcher.Watcher) tea.Cmd {
+	if w == nil {
+		return nil
+	}
+
 	return func() tea.Msg {
 		select {
-		case event := <-w.Events():
+		case event, ok := <-w.Events():
+			if !ok {
+				return watcherErrorMsg{err: fmt.Errorf("watcher events channel closed")}
+			}
 			if m.shouldProcessFileEvent(event) {
 				return fileChangedMsg{path: event.Name}
 			}
 			// Event not relevant, continue listening
 			return continueWatchingMsg{}
-		case err := <-w.Errors():
+		case err, ok := <-w.Errors():
+			if !ok {
+				return watcherErrorMsg{err: fmt.Errorf("watcher errors channel closed")}
+			}
 			return watcherErrorMsg{err: err}
 		}
 	}
