@@ -11,9 +11,10 @@ var (
 	version = "0.9.1"
 	commit  = "unknown"
 	date    = "unknown"
-	
+
 	// Global flags
 	workingDirectory string
+	noUpdateCheck    bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -29,6 +30,12 @@ real-time feedback as you code.
 Similar to Rustlings for Rust, GoForGo helps you learn Go by fixing broken
 code exercises, with automatic compilation and testing to guide your progress.`,
 	Version: fmt.Sprintf("%s (commit: %s, built: %s)", version, commit, date),
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if noUpdateCheck {
+			return
+		}
+		maybeNotifyUpdate(cmd.ErrOrStderr(), version)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -40,6 +47,7 @@ func Execute() error {
 func init() {
 	// Global flags
 	rootCmd.PersistentFlags().StringVarP(&workingDirectory, "directory", "d", "", "working directory for exercises (default: current directory)")
+	rootCmd.PersistentFlags().BoolVar(&noUpdateCheck, "no-update-check", false, "skip checking GitHub tags for newer goforgo versions")
 }
 
 // GetWorkingDirectory returns the working directory, defaulting to current directory
