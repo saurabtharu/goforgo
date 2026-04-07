@@ -7,12 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-04-07
+
+### Added
+- **TUI update notice** *(2026-04-07 11:45:00 local)*: watch mode now shows update availability in the footer so users get upgrade guidance inside the interactive interface too.
+- **`goforgo self-update` command** *(2026-04-07 11:45:00 local)*: Added a self-update command that checks tag versions and runs `go install ...@latest` after user confirmation (`--yes` to skip prompt, `--check` for check-only).
+
 ## [0.9.2] - 2026-04-07
 
 ### Added
 - **Version update check via GitHub tags** *(2026-04-07 11:35:00 local)*: CLI now checks the latest repository tag at startup and shows a non-blocking update notice when a newer semantic version is available, including a `go install ...@latest` command.
-- **TUI update notice** *(2026-04-07 11:45:00 local)*: watch mode now shows update availability in the footer so users get upgrade guidance inside the interactive interface too.
-- **`goforgo self-update` command** *(2026-04-07 11:45:00 local)*: Added a self-update command that checks tag versions and runs `go install ...@latest` after user confirmation (`--yes` to skip prompt, `--check` for check-only).
 - **Update-check opt-out flag** *(2026-04-07 11:35:00 local)*: Added `--no-update-check` global flag to skip network version checks.
 
 ## [0.9.1] - 2026-04-07
