@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Daily update-check caching** *(2026-04-07 12:05:00 local)*: GitHub tag checks are now cached for 24 hours in the user cache directory to avoid hitting the API on every command run while still surfacing updates promptly.
+
 ## [0.9.3] - 2026-04-07
 
 ### Added

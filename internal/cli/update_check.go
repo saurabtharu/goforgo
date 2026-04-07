@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,6 +20,9 @@ const (
 )
 
 var defaultTagsURLForTests = "https://api.github.com/repos/stonecharioteer/goforgo/tags?per_page=1"
+var updateCheckNow = time.Now
+var updateCheckCacheTTL = 24 * time.Hour
+var updateCachePathForTests string
 
 var (
 	updateNoticeMu sync.RWMutex
@@ -34,12 +39,19 @@ type semVersion struct {
 	Patch int
 }
 
+type updateCheckCache struct {
+	LastChecked time.Time `json:"last_checked"`
+	Current     string    `json:"current"`
+	Latest      string    `json:"latest"`
+	IsNewer     bool      `json:"is_newer"`
+}
+
 func maybeNotifyUpdate(w io.Writer, currentVersion string) {
 	maybeNotifyUpdateWithConfig(w, currentVersion, http.DefaultClient, defaultTagsURLForTests)
 }
 
 func maybeNotifyUpdateWithConfig(w io.Writer, currentVersion string, client *http.Client, tagsURL string) {
-	latest, isNewer, err := checkForUpdate(currentVersion, tagsURL, client)
+	latest, isNewer, err := resolveUpdateStatus(currentVersion, tagsURL, client)
 	if err != nil || !isNewer {
 		setUpdateNotice("")
 		return
@@ -50,6 +62,26 @@ func maybeNotifyUpdateWithConfig(w io.Writer, currentVersion string, client *htt
 		return
 	}
 	fmt.Fprint(w, cliUpdateNotice(latest, currentVersion))
+}
+
+func resolveUpdateStatus(currentVersion, tagsURL string, client *http.Client) (string, bool, error) {
+	if cache, ok := loadFreshUpdateCache(currentVersion); ok {
+		return cache.Latest, cache.IsNewer, nil
+	}
+
+	latest, isNewer, err := checkForUpdate(currentVersion, tagsURL, client)
+	if err != nil {
+		return "", false, err
+	}
+
+	_ = saveUpdateCache(updateCheckCache{
+		LastChecked: updateCheckNow().UTC(),
+		Current:     currentVersion,
+		Latest:      latest,
+		IsNewer:     isNewer,
+	})
+
+	return latest, isNewer, nil
 }
 
 func getCachedUpdateNotice() string {
@@ -125,6 +157,68 @@ func fetchLatestTag(ctx context.Context, client *http.Client, tagsURL string) (s
 	}
 
 	return tags[0].Name, nil
+}
+
+func loadFreshUpdateCache(currentVersion string) (updateCheckCache, bool) {
+	path, err := updateCachePath()
+	if err != nil {
+		return updateCheckCache{}, false
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return updateCheckCache{}, false
+	}
+
+	var cache updateCheckCache
+	if err := json.Unmarshal(data, &cache); err != nil {
+		return updateCheckCache{}, false
+	}
+
+	if cache.Current != currentVersion {
+		return updateCheckCache{}, false
+	}
+
+	if updateCheckNow().Sub(cache.LastChecked) > updateCheckCacheTTL {
+		return updateCheckCache{}, false
+	}
+
+	if cache.IsNewer && cache.Latest == "" {
+		return updateCheckCache{}, false
+	}
+
+	return cache, true
+}
+
+func saveUpdateCache(cache updateCheckCache) error {
+	path, err := updateCachePath()
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(cache)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, data, 0o644)
+}
+
+func updateCachePath() (string, error) {
+	if updateCachePathForTests != "" {
+		return updateCachePathForTests, nil
+	}
+
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Join(cacheDir, "goforgo", "update-check.json"), nil
 }
 
 func parseSemVersion(raw string) (semVersion, bool) {
