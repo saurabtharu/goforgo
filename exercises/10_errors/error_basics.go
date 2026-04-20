@@ -124,7 +124,7 @@ func main() {
 		// Process each input
 	}
 
-	fmt.Println("\\n=== Named Return Values ===\\n")
+	fmt.Println("\n=== Named Return Values ===\n")
 
 	// TODO: Test safeDivide
 	result, err = safeDivide(15, 3)
